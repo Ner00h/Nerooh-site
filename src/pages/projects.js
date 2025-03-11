@@ -3,8 +3,6 @@ export function renderProjectsPage(contentDiv) {
 
     const projectsContainer = document.createElement("div");
     projectsContainer.classList.add("projects-container");
-    
-    // Reduzindo ainda mais o padding e a margem para ficar no limite do header
     projectsContainer.style.paddingTop = "5px";
     projectsContainer.style.marginTop = "5px";
 
@@ -24,11 +22,12 @@ export function renderProjectsPage(contentDiv) {
     const projectsList = document.createElement("div");
     projectsList.classList.add("projects-list");
 
-    // Função para criar um card de projeto
-    function createProjectCard(title, description, imageUrl, link) {
+    // Função para criar um card de projeto horizontal
+    function createProjectCard(title, description, imageUrl, link, progress = 0) {
         const card = document.createElement("div");
         card.classList.add("project-card");
 
+        // Container da imagem
         const projectImage = document.createElement("div");
         projectImage.classList.add("project-image");
         if (imageUrl) {
@@ -41,6 +40,7 @@ export function renderProjectsPage(contentDiv) {
         }
         card.appendChild(projectImage);
 
+        // Container das informações
         const projectInfo = document.createElement("div");
         projectInfo.classList.add("project-info");
 
@@ -61,55 +61,66 @@ export function renderProjectsPage(contentDiv) {
         }
 
         card.appendChild(projectInfo);
-        return card;
+
+        // Barra de progresso no canto superior direito
+        const progressBarContainer = document.createElement("div");
+        progressBarContainer.classList.add("progress-bar-container");
+
+        const progressBar = document.createElement("div");
+        progressBar.classList.add("progress-bar");
+        progressBar.style.width = `${progress}%`; // Progresso inicial (0-100)
+        progressBarContainer.appendChild(progressBar);
+
+        card.appendChild(progressBarContainer);
+
+        projectsList.appendChild(card);
     }
 
-    // Adicionar alguns projetos de exemplo
+    // Adicionar projetos
     const projects = [
         {
             title: "Site Pessoal",
             description: "Meu site pessoal desenvolvido com JavaScript puro, HTML e CSS.",
             imageUrl: null,
-            link: "/"
+            link: "/",
+            progress: 100 // Exemplo: 100% concluído
         },
         {
             title: "Projeto de Impressão 3D",
             description: "Sistema de gerenciamento para impressoras 3D com monitoramento remoto.",
             imageUrl: null,
-            link: null
+            link: null,
+            progress: 70 // Exemplo: 70% concluído
         },
         {
             title: "Aplicativo de Notas",
             description: "Aplicativo para gerenciamento de notas e tarefas diárias.",
             imageUrl: null,
-            link: null
+            link: null,
+            progress: 30 // Exemplo: 30% concluído
         }
     ];
 
-    // Adicionar os projetos à lista
     projects.forEach(project => {
-        const card = createProjectCard(
+        createProjectCard(
             project.title,
             project.description,
             project.imageUrl,
-            project.link
+            project.link,
+            project.progress
         );
-        projectsList.appendChild(card);
     });
 
     projectsContainer.appendChild(projectsList);
     contentDiv.appendChild(projectsContainer);
 
-    // Posicionamento
-    const baseX = window.innerWidth / 2 - projectsContainer.offsetWidth / 2;
-    
-    // Obtendo a altura do header para um posicionamento mais preciso
+    // Posicionamento inicial centralizado como em contact.js
     const header = document.getElementById('header');
     const headerHeight = header ? header.offsetHeight : 0;
-    
-    // Calculando a posição vertical para ficar exatamente abaixo do header
-    const baseY = headerHeight + 5; // Apenas 5px de margem para ficar bem no limite
-    
+    const baseX = window.innerWidth / 2 - projectsContainer.offsetWidth / 2;
+    const baseY = headerHeight + 5; // Logo abaixo do header
+
+    projectsContainer.style.position = "absolute";
     projectsContainer.style.left = baseX + "px";
     projectsContainer.style.top = baseY + "px";
     projectsContainer.dataset.baseX = baseX;
@@ -119,4 +130,4 @@ export function renderProjectsPage(contentDiv) {
         cleanup: () => projectsContainer.remove(),
         elements: { projectsContainer }
     };
-} 
+}

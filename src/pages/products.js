@@ -3,20 +3,18 @@ export function renderProductsPage(contentDiv) {
 
     const productsContainer = document.createElement("div");
     productsContainer.classList.add("products-container");
-    
-    // Reduzindo ainda mais o padding e a margem para ficar no limite do header
     productsContainer.style.paddingTop = "5px";
     productsContainer.style.marginTop = "5px";
 
     // Título da página
     const title = document.createElement("h1");
-    title.textContent = "Meus Produtos";
+    title.textContent = "Produtos";
     title.classList.add("products-title");
     productsContainer.appendChild(title);
 
     // Descrição
     const description = document.createElement("p");
-    description.textContent = "Confira os produtos e serviços que ofereço.";
+    description.textContent = "Confira os produtos disponíveis para compra.";
     description.classList.add("products-description");
     productsContainer.appendChild(description);
 
@@ -25,7 +23,7 @@ export function renderProductsPage(contentDiv) {
     productsList.classList.add("products-list");
 
     // Função para criar um card de produto
-    function createProductCard(title, description, price, imageUrl, buyLink) {
+    function createProductCard(title, description, price, imageUrl, link) {
         const card = document.createElement("div");
         card.classList.add("product-card");
 
@@ -37,7 +35,7 @@ export function renderProductsPage(contentDiv) {
             img.alt = title;
             productImage.appendChild(img);
         } else {
-            productImage.textContent = "🛒";
+            productImage.textContent = "📦";
         }
         card.appendChild(productImage);
 
@@ -54,79 +52,67 @@ export function renderProductsPage(contentDiv) {
 
         const productPrice = document.createElement("div");
         productPrice.classList.add("product-price");
-        productPrice.textContent = `R$ ${price.toFixed(2)}`;
+        productPrice.textContent = price;
         productInfo.appendChild(productPrice);
 
-        if (buyLink) {
+        if (link) {
             const buyButton = document.createElement("a");
-            buyButton.href = buyLink;
-            buyButton.textContent = "Comprar";
+            buyButton.href = link;
             buyButton.classList.add("buy-button");
+            buyButton.textContent = "Comprar";
             buyButton.target = "_blank";
             productInfo.appendChild(buyButton);
         }
 
         card.appendChild(productInfo);
-        return card;
+        productsList.appendChild(card);
     }
 
-    // Adicionar alguns produtos de exemplo
+    // Adicionar produtos
     const products = [
         {
-            title: "Consultoria em Desenvolvimento Web",
-            description: "Consultoria personalizada para desenvolvimento de sites e aplicações web.",
-            price: 150.00,
+            title: "Filamento PLA+",
+            description: "Filamento de alta qualidade para impressões 3D.",
+            price: "R$ 89,90",
             imageUrl: null,
-            buyLink: "/contato"
+            link: null
         },
         {
-            title: "Modelo 3D Personalizado",
-            description: "Criação de modelos 3D personalizados para impressão.",
-            price: 80.00,
+            title: "Impressora 3D Custom",
+            description: "Impressora personalizada para projetos avançados.",
+            price: "R$ 2.499,00",
             imageUrl: null,
-            buyLink: "/contato"
+            link: null
         },
         {
-            title: "Curso de JavaScript Básico",
-            description: "Curso online com 10 horas de conteúdo sobre JavaScript para iniciantes.",
-            price: 49.90,
+            title: "Kit de Ferramentas",
+            description: "Ferramentas essenciais para manutenção de impressoras.",
+            price: "R$ 149,90",
             imageUrl: null,
-            buyLink: null
-        },
-        {
-            title: "Hospedagem de Site",
-            description: "Serviço de hospedagem para seu site ou aplicação web.",
-            price: 29.90,
-            imageUrl: null,
-            buyLink: "/contato"
+            link: null
         }
     ];
 
-    // Adicionar os produtos à lista
     products.forEach(product => {
-        const card = createProductCard(
+        createProductCard(
             product.title,
             product.description,
             product.price,
             product.imageUrl,
-            product.buyLink
+            product.link
         );
-        productsList.appendChild(card);
     });
 
     productsContainer.appendChild(productsList);
     contentDiv.appendChild(productsContainer);
 
-    // Posicionamento
-    const baseX = window.innerWidth / 2 - productsContainer.offsetWidth / 2;
-    
-    // Obtendo a altura do header para um posicionamento mais preciso
+    // Posicionamento inicial centralizado como em contact.js
     const header = document.getElementById('header');
     const headerHeight = header ? header.offsetHeight : 0;
-    
-    // Calculando a posição vertical para ficar exatamente abaixo do header
-    const baseY = headerHeight + 5; // Apenas 5px de margem para ficar bem no limite
-    
+    const baseX = window.innerWidth / 2 - productsContainer.offsetWidth / 2;
+    const baseY = headerHeight + 5; // Logo abaixo do header
+
+    productsContainer.style.position = "absolute";
     productsContainer.style.left = baseX + "px";
     productsContainer.style.top = baseY + "px";
     productsContainer.dataset.baseX = baseX;
@@ -136,4 +122,4 @@ export function renderProductsPage(contentDiv) {
         cleanup: () => productsContainer.remove(),
         elements: { productsContainer }
     };
-} 
+}

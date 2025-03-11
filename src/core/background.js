@@ -73,38 +73,18 @@ export function animateBackground(stars, planets, dynamicElements = {}) {
             planet.style.top = (baseY + randomDy + mouseDy - window.scrollY * 0.2) + "px";
         });
 
-        if (dynamicElements.introText) {
-            const baseX = parseFloat(dynamicElements.introText.dataset.baseX);
-            const baseY = parseFloat(dynamicElements.introText.dataset.baseY);
-            const randomDx = parseFloat(dynamicElements.introText.dataset.randomX) || 0;
-            const randomDy = parseFloat(dynamicElements.introText.dataset.randomY) || 0;
-            const mouseDx = mouseX !== null ? (mouseX - baseX - dynamicElements.introText.offsetWidth / 2) * 0.02 : 0;
-            const mouseDy = mouseY !== null ? (mouseY - baseY - dynamicElements.introText.offsetHeight / 2) * 0.02 : 0;
-            dynamicElements.introText.style.left = (baseX + randomDx + mouseDx) + "px";
-            dynamicElements.introText.style.top = (baseY + randomDy + mouseDy - window.scrollY * 0.05) + "px";
-        }
-
-        if (dynamicElements.introVideo) {
-            const baseX = parseFloat(dynamicElements.introVideo.dataset.baseX);
-            const baseY = parseFloat(dynamicElements.introVideo.dataset.baseY);
-            const randomDx = parseFloat(dynamicElements.introVideo.dataset.randomX) || 0;
-            const randomDy = parseFloat(dynamicElements.introVideo.dataset.randomY) || 0;
-            const mouseDx = mouseX !== null ? (mouseX - baseX - (window.innerWidth * 0.9) / 2) * 0.05 : 0;
-            const mouseDy = mouseY !== null ? (mouseY - baseY - (window.innerWidth * 0.9 * 9 / 16) / 2) * 0.05 : 0;
-            dynamicElements.introVideo.style.left = (baseX + randomDx + mouseDx) + "px";
-            dynamicElements.introVideo.style.top = (baseY + randomDy + mouseDy - window.scrollY * 0.1) + "px";
-        }
-
-        if (dynamicElements.contactInfo) {
-            const baseX = parseFloat(dynamicElements.contactInfo.dataset.baseX);
-            const baseY = parseFloat(dynamicElements.contactInfo.dataset.baseY);
-            const randomDx = parseFloat(dynamicElements.contactInfo.dataset.randomX) || 0;
-            const randomDy = parseFloat(dynamicElements.contactInfo.dataset.randomY) || 0;
-            const mouseDx = mouseX !== null ? (mouseX - baseX - dynamicElements.contactInfo.offsetWidth / 2) * 0.05 : 0;
-            const mouseDy = mouseY !== null ? (mouseY - baseY - dynamicElements.contactInfo.offsetHeight / 2) * 0.05 : 0;
-            dynamicElements.contactInfo.style.left = (baseX + randomDx + mouseDx) + "px";
-            dynamicElements.contactInfo.style.top = (baseY + randomDy + mouseDy - window.scrollY * 0.1) + "px";
-        }
+        // Atualizar todos os dynamicElements (como productsContainer e projectsContainer)
+        Object.values(dynamicElements).forEach(element => {
+            if (!element || !element.offsetWidth || !element.offsetHeight) return;
+            const baseX = parseFloat(element.dataset.baseX);
+            const baseY = parseFloat(element.dataset.baseY);
+            const randomDx = parseFloat(element.dataset.randomX) || 0;
+            const randomDy = parseFloat(element.dataset.randomY) || 0;
+            const mouseDx = mouseX !== null ? (mouseX - baseX - element.offsetWidth / 2) * 0.02 : 0;
+            const mouseDy = mouseY !== null ? (mouseY - baseY - element.offsetHeight / 2) * 0.02 : 0;
+            element.style.left = (baseX + randomDx + mouseDx) + "px";
+            element.style.top = (baseY + randomDy + mouseDy - window.scrollY * 0.05) + "px";
+        });
     }
 
     setInterval(() => {
@@ -115,6 +95,12 @@ export function animateBackground(stars, planets, dynamicElements = {}) {
         planets.forEach(planet => {
             planet.dataset.randomX = (Math.random() - 0.5) * 10;
             planet.dataset.randomY = (Math.random() - 0.5) * 10;
+        });
+        Object.values(dynamicElements).forEach(element => {
+            if (element) {
+                element.dataset.randomX = (Math.random() - 0.5) * 10;
+                element.dataset.randomY = (Math.random() - 0.5) * 10;
+            }
         });
         updatePositions(null, null);
     }, 2000);
@@ -127,9 +113,9 @@ export function animateBackground(stars, planets, dynamicElements = {}) {
         updatePositions(null, null);
     });
 
-    document.addEventListener('routeChange', (e) => {
+    document.addEventListener('routeChange', () => {
         updatePositions(null, null);
     });
 
-    return () => updatePositions(null, null); // Função para resetar posições
+    return () => updatePositions(null, null);
 }

@@ -2268,3 +2268,109 @@ header.scrolled {
     background-color: #e68a00;
     transform: scale(1.05);
 }
+
+/* Estilos gerais do container de projetos */
+.projects-container {
+    max-width: 800px; /* Largura máxima do container */
+    margin: 0 auto;
+    padding: 20px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+}
+
+.projects-title {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.projects-description {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Estilos da lista de projetos */
+.projects-list {
+    display: flex;
+    flex-direction: column; /* Cards empilhados verticalmente */
+    gap: 20px; /* Espaçamento entre os cards */
+}
+
+/* Estilos do card de projeto (horizontal) */
+.project-card {
+    display: flex;
+    flex-direction: row; /* Imagem à esquerda, info à direita */
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    position: relative; /* Para posicionar a barra de progresso */
+    width: 100%; /* O card ocupa toda a largura disponível */
+    min-height: 150px; /* Altura mínima para consistência */
+}
+
+/* Estilos da imagem do projeto */
+.project-image {
+    flex-shrink: 0;
+    width: 150px; /* Largura fixa da imagem */
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 20px; /* Espaço entre imagem e texto */
+}
+
+.project-image img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+/* Estilos das informações do projeto */
+.project-info {
+    flex-grow: 1; /* Ocupa o espaço restante */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.project-info h3 {
+    font-size: 1.5em;
+    margin: 0 0 10px 0;
+}
+
+.project-info p {
+    font-size: 1em;
+    margin: 0 0 10px 0;
+}
+
+.project-info a {
+    color: #00ccff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.project-info a:hover {
+    text-decoration: underline;
+}
+
+/* Estilos da barra de progresso */
+.progress-bar-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 100px; /* Largura fixa da barra */
+    height: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: #00ccff; /* Cor da barra de progresso */
+    transition: width 0.3s ease; /* Animação suave ao mudar o progresso */
+}
