@@ -2374,3 +2374,241 @@ header.scrolled {
     background: #00ccff; /* Cor da barra de progresso */
     transition: width 0.3s ease; /* Animação suave ao mudar o progresso */
 }
+
+/* Estilos para a página de detalhes do projeto */
+.project-detail-container {
+    max-width: 1000px;
+    width: 90%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: var(--bg-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.back-button {
+    display: inline-block;
+    padding: 8px 16px;
+    margin-bottom: 20px;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.back-button:hover {
+    background-color: var(--accent-hover);
+}
+
+.project-detail-header {
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 20px;
+}
+
+.project-detail-title {
+    font-size: 2.2rem;
+    margin-bottom: 15px;
+    color: var(--text-color);
+}
+
+.project-detail-progress-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+}
+
+.project-detail-progress-container span {
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: var(--text-color-light);
+}
+
+.project-detail-progress-bar {
+    height: 8px;
+    background-color: var(--accent-color);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.project-detail-gallery {
+    margin-bottom: 30px;
+}
+
+.project-detail-main-image {
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.project-detail-main-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.project-detail-main-image img:hover {
+    transform: scale(1.02);
+}
+
+.project-detail-thumbnails {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.project-detail-thumbnail {
+    width: 80px;
+    height: 80px;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+
+.project-detail-thumbnail.active {
+    opacity: 1;
+    box-shadow: 0 0 0 2px var(--accent-color);
+}
+
+.project-detail-thumbnail:hover {
+    opacity: 0.9;
+}
+
+.project-detail-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.project-detail-single-image {
+    width: 100%;
+    max-height: 500px;
+    overflow: hidden;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.project-detail-single-image img {
+    width: 100%;
+    object-fit: contain;
+}
+
+.project-detail-info {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+}
+
+.project-detail-description h2,
+.project-detail-technologies h2,
+.project-detail-features h2 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: var(--text-color);
+}
+
+.project-detail-description p {
+    line-height: 1.6;
+    color: var(--text-color);
+}
+
+.project-detail-technologies ul,
+.project-detail-features ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.project-detail-technologies li {
+    background-color: var(--accent-color-light);
+    color: var(--accent-color);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.project-detail-features li {
+    position: relative;
+    padding-left: 24px;
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.project-detail-features li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+.project-detail-link {
+    margin-top: 20px;
+}
+
+.project-detail-link-button {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: var(--accent-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.project-detail-link-button:hover {
+    background-color: var(--accent-hover);
+}
+
+/* Estilos para o botão "Ver mais" nos cards de projetos */
+.view-more-btn {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.view-more-btn:hover {
+    background-color: var(--accent-hover);
+}
+
+/* Responsividade para a página de detalhes */
+@media (max-width: 768px) {
+    .project-detail-main-image {
+        height: 300px;
+    }
+    
+    .project-detail-info {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .project-detail-main-image {
+        height: 200px;
+    }
+    
+    .project-detail-title {
+        font-size: 1.8rem;
+    }
+    
+    .project-detail-thumbnail {
+        width: 60px;
+        height: 60px;
+    }
+}

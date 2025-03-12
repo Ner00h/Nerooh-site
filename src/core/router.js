@@ -4,6 +4,7 @@ import { renderContactPage } from '../pages/contact.js';
 import { renderLoginPage } from '../pages/login.js';
 import { renderProjectsPage } from '../pages/projects.js';
 import { renderProductsPage } from '../pages/products.js';
+import { renderProjectDetailPage } from '../pages/projectDetail.js';
 import { isAuthenticated } from './auth.js';
 
 export function initRouter(contentDiv, updateDynamicElements, getAuthStatus) {
@@ -45,6 +46,17 @@ export function initRouter(contentDiv, updateDynamicElements, getAuthStatus) {
         const path = window.location.pathname || '/';
         const state = history.state || {};
         const message = state.message;
+        
+        // Verificar se é uma rota de detalhe de projeto
+        const projectDetailMatch = path.match(/^\/projetos\/([a-zA-Z0-9-]+)$/);
+        if (projectDetailMatch) {
+            const projectId = projectDetailMatch[1];
+            console.log('Renderizando detalhe do projeto:', projectId);
+            const { cleanup, elements } = renderProjectDetailPage(contentDiv, projectId);
+            currentCleanup = cleanup;
+            updateDynamicElements(elements);
+            return;
+        }
         
         let route;
         if (path === '/login') {

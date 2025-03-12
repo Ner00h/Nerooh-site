@@ -23,17 +23,25 @@ export function renderProjectsPage(contentDiv) {
     projectsList.classList.add("projects-list");
 
     // Função para criar um card de projeto horizontal
-    function createProjectCard(title, description, imageUrl, link, progress = 0) {
+    function createProjectCard(project) {
         const card = document.createElement("div");
         card.classList.add("project-card");
+        // Adicionar cursor pointer para indicar que é clicável
+        card.style.cursor = "pointer";
+        
+        // Adicionar evento de clique para navegar para a página de detalhes
+        card.addEventListener("click", () => {
+            history.pushState({ page: 'project-detail', projectId: project.id }, null, `/projetos/${project.id}`);
+            window.dispatchEvent(new Event('route-change'));
+        });
 
         // Container da imagem
         const projectImage = document.createElement("div");
         projectImage.classList.add("project-image");
-        if (imageUrl) {
+        if (project.imageUrl) {
             const img = document.createElement("img");
-            img.src = imageUrl;
-            img.alt = title;
+            img.src = project.imageUrl;
+            img.alt = project.title;
             projectImage.appendChild(img);
         } else {
             projectImage.textContent = "🖼️";
@@ -45,20 +53,18 @@ export function renderProjectsPage(contentDiv) {
         projectInfo.classList.add("project-info");
 
         const projectTitle = document.createElement("h3");
-        projectTitle.textContent = title;
+        projectTitle.textContent = project.title;
         projectInfo.appendChild(projectTitle);
 
         const projectDesc = document.createElement("p");
-        projectDesc.textContent = description;
+        projectDesc.textContent = project.description;
         projectInfo.appendChild(projectDesc);
 
-        if (link) {
-            const projectLink = document.createElement("a");
-            projectLink.href = link;
-            projectLink.textContent = "Ver projeto";
-            projectLink.target = "_blank";
-            projectInfo.appendChild(projectLink);
-        }
+        // Substituir o link direto por um botão "Ver mais"
+        const viewMoreBtn = document.createElement("button");
+        viewMoreBtn.textContent = "Ver mais";
+        viewMoreBtn.classList.add("view-more-btn");
+        projectInfo.appendChild(viewMoreBtn);
 
         card.appendChild(projectInfo);
 
@@ -68,7 +74,7 @@ export function renderProjectsPage(contentDiv) {
 
         const progressBar = document.createElement("div");
         progressBar.classList.add("progress-bar");
-        progressBar.style.width = `${progress}%`; // Progresso inicial (0-100)
+        progressBar.style.width = `${project.progress}%`; // Progresso inicial (0-100)
         progressBarContainer.appendChild(progressBar);
 
         card.appendChild(progressBarContainer);
@@ -79,6 +85,7 @@ export function renderProjectsPage(contentDiv) {
     // Adicionar projetos
     const projects = [
         {
+            id: "site-pessoal",
             title: "Site Pessoal",
             description: "Meu site pessoal desenvolvido com JavaScript puro, HTML e CSS.",
             imageUrl: null,
@@ -86,6 +93,7 @@ export function renderProjectsPage(contentDiv) {
             progress: 100 // Exemplo: 100% concluído
         },
         {
+            id: "impressao-3d",
             title: "Projeto de Impressão 3D",
             description: "Sistema de gerenciamento para impressoras 3D com monitoramento remoto.",
             imageUrl: null,
@@ -93,6 +101,7 @@ export function renderProjectsPage(contentDiv) {
             progress: 70 // Exemplo: 70% concluído
         },
         {
+            id: "app-notas",
             title: "Aplicativo de Notas",
             description: "Aplicativo para gerenciamento de notas e tarefas diárias.",
             imageUrl: null,
@@ -102,13 +111,7 @@ export function renderProjectsPage(contentDiv) {
     ];
 
     projects.forEach(project => {
-        createProjectCard(
-            project.title,
-            project.description,
-            project.imageUrl,
-            project.link,
-            project.progress
-        );
+        createProjectCard(project);
     });
 
     projectsContainer.appendChild(projectsList);
