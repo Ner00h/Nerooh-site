@@ -7,6 +7,9 @@ export function renderProjectsPage(contentDiv) {
     projectsContainer.classList.add("projects-container");
     projectsContainer.style.paddingTop = "5px";
     projectsContainer.style.marginTop = "5px";
+    projectsContainer.style.maxWidth = "800px"; // Definir largura máxima
+    projectsContainer.style.width = "90%"; // Garantir responsividade
+    projectsContainer.style.overflowX = "hidden"; // Evitar overflow horizontal
     contentDiv.appendChild(projectsContainer);
 
     // Título da página
@@ -24,6 +27,10 @@ export function renderProjectsPage(contentDiv) {
     // Lista de projetos
     const projectsList = document.createElement("div");
     projectsList.classList.add("projects-list");
+    projectsList.style.width = "100%"; // Garantir que a lista ocupe toda a largura disponível
+    projectsList.style.display = "flex";
+    projectsList.style.flexDirection = "column";
+    projectsList.style.gap = "20px";
     projectsContainer.appendChild(projectsList);
 
     // Carregar projetos do Firebase
@@ -62,8 +69,14 @@ export function renderProjectsPage(contentDiv) {
     function createProjectCard(id, project) {
         const card = document.createElement("div");
         card.classList.add("project-card");
-        // Adicionar cursor pointer para indicar que é clicável
         card.style.cursor = "pointer";
+        card.style.display = "flex";
+        card.style.flexDirection = "row";
+        card.style.alignItems = "center";
+        card.style.width = "100%"; // Garantir que o card ocupe toda a largura disponível
+        card.style.maxWidth = "100%"; // Limitar a largura máxima
+        card.style.boxSizing = "border-box"; // Incluir padding e border na largura total
+        card.style.overflow = "hidden"; // Evitar que o conteúdo ultrapasse o card
         
         // Adicionar evento de clique para navegar para a página de detalhes
         card.addEventListener("click", () => {
@@ -74,32 +87,61 @@ export function renderProjectsPage(contentDiv) {
         // Container da imagem
         const projectImage = document.createElement("div");
         projectImage.classList.add("project-image");
+        projectImage.style.flexShrink = "0";
+        projectImage.style.width = "120px";
+        projectImage.style.height = "120px";
+        projectImage.style.marginRight = "15px";
+        
         if (project.imageUrl) {
             const img = document.createElement("img");
             img.src = project.imageUrl;
             img.alt = project.title;
+            img.style.width = "100%";
+            img.style.height = "100%";
+            img.style.objectFit = "cover";
             projectImage.appendChild(img);
         } else {
             projectImage.textContent = "🖼️";
+            projectImage.style.display = "flex";
+            projectImage.style.alignItems = "center";
+            projectImage.style.justifyContent = "center";
+            projectImage.style.fontSize = "2rem";
         }
         card.appendChild(projectImage);
 
         // Container das informações
         const projectInfo = document.createElement("div");
         projectInfo.classList.add("project-info");
-
+        projectInfo.style.flex = "1";
+        projectInfo.style.overflow = "hidden"; // Evitar que o texto ultrapasse o container
+        
         const projectTitle = document.createElement("h3");
         projectTitle.textContent = project.title;
+        projectTitle.style.margin = "0 0 8px 0";
+        projectTitle.style.fontSize = "1.2rem";
         projectInfo.appendChild(projectTitle);
 
         const projectDesc = document.createElement("p");
         projectDesc.textContent = project.description;
+        projectDesc.style.margin = "0 0 12px 0";
+        projectDesc.style.fontSize = "0.9rem";
+        projectDesc.style.overflow = "hidden";
+        projectDesc.style.textOverflow = "ellipsis";
+        projectDesc.style.display = "-webkit-box";
+        projectDesc.style.webkitLineClamp = "2";
+        projectDesc.style.webkitBoxOrient = "vertical";
         projectInfo.appendChild(projectDesc);
 
-        // Substituir o link direto por um botão "Ver mais"
+        // Botão "Ver mais"
         const viewMoreBtn = document.createElement("button");
         viewMoreBtn.textContent = "Ver mais";
         viewMoreBtn.classList.add("view-more-btn");
+        viewMoreBtn.style.padding = "5px 10px";
+        viewMoreBtn.style.border = "none";
+        viewMoreBtn.style.borderRadius = "4px";
+        viewMoreBtn.style.backgroundColor = "#00ffcc";
+        viewMoreBtn.style.color = "#000";
+        viewMoreBtn.style.cursor = "pointer";
         projectInfo.appendChild(viewMoreBtn);
 
         card.appendChild(projectInfo);
@@ -107,9 +149,19 @@ export function renderProjectsPage(contentDiv) {
         // Barra de progresso no canto superior direito
         const progressBarContainer = document.createElement("div");
         progressBarContainer.classList.add("progress-bar-container");
+        progressBarContainer.style.position = "absolute";
+        progressBarContainer.style.top = "10px";
+        progressBarContainer.style.right = "10px";
+        progressBarContainer.style.width = "60px";
+        progressBarContainer.style.height = "6px";
+        progressBarContainer.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+        progressBarContainer.style.borderRadius = "3px";
 
         const progressBar = document.createElement("div");
         progressBar.classList.add("progress-bar");
+        progressBar.style.height = "100%";
+        progressBar.style.backgroundColor = "#00ffcc";
+        progressBar.style.borderRadius = "3px";
         progressBar.style.width = `${project.progress || 0}%`; // Progresso inicial (0-100)
         progressBarContainer.appendChild(progressBar);
 
@@ -120,6 +172,6 @@ export function renderProjectsPage(contentDiv) {
 
     return {
         cleanup: () => projectsContainer.remove(),
-        elements: { projectsContainer }
+        elements: { projectsContainer } // Restaurar o container para que seja adicionado ao dynamicElements
     };
 }

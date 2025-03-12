@@ -27,26 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cleanupAuth = setupAuth((authenticated) => {
         isUserAuthenticated = authenticated;
         
-        // Adicionar link de admin se o usuário for administrador
-        const adminLink = document.getElementById('admin-link');
-        if (!adminLink && isAdmin()) {
-            const navMenu = document.querySelector('.nav-menu');
-            if (navMenu) {
-                const adminLinkElement = document.createElement('a');
-                adminLinkElement.textContent = 'Admin';
-                adminLinkElement.id = 'admin-link';
-                adminLinkElement.classList.add('nav-item');
-                adminLinkElement.href = '/admin';
-                adminLinkElement.setAttribute('data-page', 'admin');
-                
-                navMenu.appendChild(adminLinkElement);
-                
-                // Atualizar os event listeners para incluir o novo link de admin
-                if (setupEventListeners) {
-                    setupEventListeners();
-                }
-            }
-        }
+        // Não adicionar link de admin no header, será adicionado no dropdown menu
         
         // Não inicializar o roteador aqui, apenas disparar um evento para atualizar a UI
         if (routerInitialized) {

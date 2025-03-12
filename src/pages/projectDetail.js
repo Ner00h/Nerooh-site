@@ -9,6 +9,23 @@ export function renderProjectDetailPage(contentDiv, projectId) {
     projectDetailContainer.classList.add("project-detail-container");
     contentDiv.appendChild(projectDetailContainer);
 
+    // Posicionamento fixo (sem movimento para economizar processamento)
+    const baseX = window.innerWidth / 2 - projectDetailContainer.offsetWidth / 2;
+    const headerHeight = document.getElementById('header').offsetHeight;
+    const baseY = headerHeight + 20;
+    projectDetailContainer.style.position = "absolute";
+    projectDetailContainer.style.left = baseX + 'px';
+    projectDetailContainer.style.top = baseY + 'px';
+
+    // Função para ajustar a posição do container apenas quando necessário (redimensionamento)
+    function adjustContainerPosition() {
+        const updatedBaseX = window.innerWidth / 2 - projectDetailContainer.offsetWidth / 2;
+        projectDetailContainer.style.left = updatedBaseX + 'px';
+    }
+
+    // Ajustar posição após um curto período para garantir que o DOM foi renderizado
+    setTimeout(adjustContainerPosition, 50);
+
     // Carregar dados do projeto do Firebase
     const db = getDatabase();
     const projectRef = ref(db, `projects/${projectId}`);
@@ -30,6 +47,9 @@ export function renderProjectDetailPage(contentDiv, projectId) {
                 window.dispatchEvent(new Event('route-change'));
             });
             
+            // Ajustar posição após carregar o conteúdo de erro
+            setTimeout(adjustContainerPosition, 100);
+            
             return;
         }
 
@@ -37,16 +57,9 @@ export function renderProjectDetailPage(contentDiv, projectId) {
         onValue(subpageRef, (subpageSnapshot) => {
             const subpage = subpageSnapshot.val() || {};
             
-            // Construir a interface do projeto
+            // Construir a interface do projeto - apenas com botão de voltar
             projectDetailContainer.innerHTML = `
                 <button class="back-button">← Voltar para Projetos</button>
-                <div class="project-detail-header">
-                    <h1 class="project-detail-title">${project.title}</h1>
-                    <div class="project-detail-progress-container">
-                        <span>Progresso: ${project.progress || 0}%</span>
-                        <div class="project-detail-progress-bar" style="width: ${project.progress || 0}%"></div>
-                    </div>
-                </div>
             `;
 
             // Adicionar imagem se existir
@@ -62,32 +75,7 @@ export function renderProjectDetailPage(contentDiv, projectId) {
                 projectDetailContainer.appendChild(singleImage);
             }
 
-            // Informações detalhadas
-            const infoSection = document.createElement("div");
-            infoSection.classList.add("project-detail-info");
-            
-            // Descrição
-            const description = document.createElement("div");
-            description.classList.add("project-detail-description");
-            
-            const descTitle = document.createElement("h2");
-            descTitle.textContent = "Descrição";
-            description.appendChild(descTitle);
-            
-            const descText = document.createElement("p");
-            descText.textContent = project.description;
-            description.appendChild(descText);
-            
-            infoSection.appendChild(description);
-
-            // Conteúdo da subpágina
-            const contentSection = document.createElement("div");
-            contentSection.classList.add("project-detail-content");
-            
-            const contentTitle = document.createElement("h2");
-            contentTitle.textContent = "Conteúdo";
-            contentSection.appendChild(contentTitle);
-            
+            // Conteúdo da subpágina - sem título
             const contentDiv = document.createElement("div");
             contentDiv.classList.add("project-detail-content-html");
             
@@ -97,11 +85,9 @@ export function renderProjectDetailPage(contentDiv, projectId) {
                 : 'Nenhum conteúdo adicional disponível.';
                 
             contentDiv.innerHTML = sanitizedContent;
-            contentSection.appendChild(contentDiv);
             
-            infoSection.appendChild(contentSection);
-            
-            projectDetailContainer.appendChild(infoSection);
+            // Adicionar o conteúdo diretamente ao container principal
+            projectDetailContainer.appendChild(contentDiv);
 
             // Evento do botão voltar
             projectDetailContainer.querySelector('.back-button').addEventListener('click', () => {
@@ -109,20 +95,19 @@ export function renderProjectDetailPage(contentDiv, projectId) {
                 window.dispatchEvent(new Event('route-change'));
             });
 
-            // Posicionamento dinâmico
-            const baseX = window.innerWidth / 2 - projectDetailContainer.offsetWidth / 2;
-            const headerHeight = document.getElementById('header').offsetHeight;
-            const baseY = headerHeight + 20;
-            projectDetailContainer.style.position = "absolute";
-            projectDetailContainer.style.left = baseX + 'px';
-            projectDetailContainer.style.top = baseY + 'px';
-            projectDetailContainer.dataset.baseX = baseX;
-            projectDetailContainer.dataset.baseY = baseY;
+            // Ajustar posição após o carregamento completo do conteúdo
+            setTimeout(adjustContainerPosition, 100);
         });
     });
 
+    // Adicionar evento de redimensionamento da janela
+    window.addEventListener('resize', adjustContainerPosition);
+
     return {
-        cleanup: () => projectDetailContainer.remove(),
-        elements: { projectDetailContainer }
+        cleanup: () => {
+            projectDetailContainer.remove();
+            window.removeEventListener('resize', adjustContainerPosition);
+        },
+        elements: {} // Retornar um objeto elements vazio para que o container não seja adicionado ao dynamicElements
     };
 }

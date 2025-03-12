@@ -108,9 +108,20 @@ export function renderAdminPage(contentDiv) {
     setupProductManager();
     setupSubpageEditor();
 
+    // Adicionar evento de redimensionamento da janela
+    function adjustContainerPosition() {
+        const updatedBaseX = window.innerWidth / 2 - adminPanel.offsetWidth / 2;
+        adminPanel.style.left = updatedBaseX + 'px';
+    }
+    
+    window.addEventListener('resize', adjustContainerPosition);
+
     return {
-        cleanup: () => adminPanel.remove(),
-        elements: { adminPanel }
+        cleanup: () => {
+            adminPanel.remove();
+            window.removeEventListener('resize', adjustContainerPosition);
+        },
+        elements: {} // Retornar um objeto elements vazio para que o container não seja adicionado ao dynamicElements
     };
 }
 

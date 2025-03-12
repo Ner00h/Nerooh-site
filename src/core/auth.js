@@ -69,6 +69,14 @@ export function setupAuth(updateAuthStatus) {
     separator.classList.add("dropdown-separator");
     dropdownMenu.appendChild(separator);
     
+    // Botão de admin (será mostrado apenas para administradores)
+    const adminButton = document.createElement("button");
+    adminButton.id = "admin-button";
+    adminButton.classList.add("dropdown-item");
+    adminButton.textContent = "Admin";
+    adminButton.style.display = "none"; // Inicialmente oculto, será mostrado apenas para admins
+    dropdownMenu.appendChild(adminButton);
+    
     // Botão de editar perfil
     const editProfileButton = document.createElement("button");
     editProfileButton.id = "edit-profile-button";
@@ -167,6 +175,27 @@ export function setupAuth(updateAuthStatus) {
                     // Abrir modal de edição de perfil
                     showEditProfileModal(user);
                 };
+            }
+            
+            // Verificar se o usuário é administrador e mostrar o botão de admin
+            const adminButtonCheck = document.getElementById('admin-button');
+            if (adminButtonCheck) {
+                if (isAdmin()) {
+                    adminButtonCheck.style.display = "flex";
+                    adminButtonCheck.onclick = () => {
+                        // Fechar dropdown
+                        const dropdownMenuCheck = document.getElementById('dropdown-menu');
+                        if (dropdownMenuCheck) {
+                            dropdownMenuCheck.classList.remove("show");
+                        }
+                        
+                        // Navegar para a página de admin
+                        history.pushState({ page: 'admin' }, null, '/admin');
+                        window.dispatchEvent(new CustomEvent('route-change'));
+                    };
+                } else {
+                    adminButtonCheck.style.display = "none";
+                }
             }
             
             // Configurar evento de logout

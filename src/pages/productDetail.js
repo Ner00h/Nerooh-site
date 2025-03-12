@@ -9,21 +9,18 @@ export function renderProductDetailPage(contentDiv, productId) {
     productDetailContainer.classList.add("product-detail-container");
     contentDiv.appendChild(productDetailContainer);
 
-    // Posicionamento inicial
+    // Posicionamento fixo (sem movimento para economizar processamento)
     const baseX = window.innerWidth / 2 - productDetailContainer.offsetWidth / 2;
     const headerHeight = document.getElementById('header').offsetHeight;
     const baseY = headerHeight + 20;
     productDetailContainer.style.position = "absolute";
     productDetailContainer.style.left = baseX + 'px';
     productDetailContainer.style.top = baseY + 'px';
-    productDetailContainer.dataset.baseX = baseX;
-    productDetailContainer.dataset.baseY = baseY;
-
-    // Função para ajustar a posição do container
+    
+    // Função para ajustar a posição do container apenas quando necessário (redimensionamento)
     function adjustContainerPosition() {
         const updatedBaseX = window.innerWidth / 2 - productDetailContainer.offsetWidth / 2;
         productDetailContainer.style.left = updatedBaseX + 'px';
-        productDetailContainer.dataset.baseX = updatedBaseX;
     }
 
     // Ajustar posição após um curto período para garantir que o DOM foi renderizado
@@ -151,8 +148,14 @@ export function renderProductDetailPage(contentDiv, productId) {
         });
     });
 
+    // Adicionar evento de redimensionamento da janela
+    window.addEventListener('resize', adjustContainerPosition);
+
     return {
-        cleanup: () => productDetailContainer.remove(),
-        elements: { productDetailContainer }
+        cleanup: () => {
+            productDetailContainer.remove();
+            window.removeEventListener('resize', adjustContainerPosition);
+        },
+        elements: {} // Retornar um objeto elements vazio para que o container não seja adicionado ao dynamicElements
     };
 } 
