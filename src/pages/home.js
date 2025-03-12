@@ -10,12 +10,19 @@ export function renderHomePage(contentDiv) {
     introText.appendChild(h1);
     introText.appendChild(p);
     contentDiv.appendChild(introText);
-    const baseX = window.innerWidth / 2 - introText.offsetWidth / 2;
-    const baseY = window.innerHeight / 2 - introText.offsetHeight / 2;
-    introText.style.left = baseX + "px";
-    introText.style.top = baseY + "px";
-    introText.dataset.baseX = baseX;
-    introText.dataset.baseY = baseY;
+    
+    // Posicionamento inicial do texto
+    function positionIntroText() {
+        const baseX = window.innerWidth / 2 - introText.offsetWidth / 2;
+        const baseY = window.innerHeight / 2 - introText.offsetHeight / 2;
+        introText.style.position = "absolute";
+        introText.style.left = baseX + "px";
+        introText.style.top = baseY + "px";
+        introText.dataset.baseX = baseX;
+        introText.dataset.baseY = baseY;
+    }
+    
+    positionIntroText();
 
     const introVideo = document.createElement("iframe");
     introVideo.classList.add("intro-video");
@@ -24,17 +31,33 @@ export function renderHomePage(contentDiv) {
     introVideo.allow = "autoplay; encrypted-media";
     introVideo.allowFullscreen = true;
     document.body.appendChild(introVideo);
-    const videoBaseX = window.innerWidth / 2 - (window.innerWidth * 0.9) / 2;
-    const videoBaseY = window.innerHeight / 2 + 250;
-    introVideo.style.left = videoBaseX + "px";
-    introVideo.style.top = videoBaseY + "px";
-    introVideo.dataset.baseX = videoBaseX;
-    introVideo.dataset.baseY = videoBaseY;
+    
+    // Posicionamento inicial do vídeo
+    function positionIntroVideo() {
+        const videoBaseX = window.innerWidth / 2 - (window.innerWidth * 0.9) / 2;
+        const videoBaseY = window.innerHeight / 2 + 250;
+        introVideo.style.position = "absolute";
+        introVideo.style.left = videoBaseX + "px";
+        introVideo.style.top = videoBaseY + "px";
+        introVideo.dataset.baseX = videoBaseX;
+        introVideo.dataset.baseY = videoBaseY;
+    }
+    
+    positionIntroVideo();
+    
+    // Adicionar evento de redimensionamento da janela para a página inicial
+    const resizeHandler = () => {
+        positionIntroText();
+        positionIntroVideo();
+    };
+    
+    window.addEventListener('resize', resizeHandler);
 
     return {
         cleanup: () => {
             introText.remove();
             introVideo.remove();
+            window.removeEventListener('resize', resizeHandler);
         },
         elements: { introText, introVideo }
     };

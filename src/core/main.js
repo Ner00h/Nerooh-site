@@ -1,7 +1,7 @@
 import '../styles/style.css';
 import { initBackground, animateBackground } from './background.js';
-import { initRouter } from './router.js';
-import { setupAuth } from './auth.js';
+import { initRouter, setupEventListeners } from './router.js';
+import { setupAuth, isAdmin } from './auth.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const contentDiv = document.getElementById('content');
@@ -26,6 +26,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const cleanupAuth = setupAuth((authenticated) => {
         isUserAuthenticated = authenticated;
+        
+        // Adicionar link de admin se o usuário for administrador
+        const adminLink = document.getElementById('admin-link');
+        if (!adminLink && isAdmin()) {
+            const navMenu = document.querySelector('.nav-menu');
+            if (navMenu) {
+                const adminLinkElement = document.createElement('a');
+                adminLinkElement.textContent = 'Admin';
+                adminLinkElement.id = 'admin-link';
+                adminLinkElement.classList.add('nav-item');
+                adminLinkElement.href = '/admin';
+                adminLinkElement.setAttribute('data-page', 'admin');
+                
+                navMenu.appendChild(adminLinkElement);
+                
+                // Atualizar os event listeners para incluir o novo link de admin
+                if (setupEventListeners) {
+                    setupEventListeners();
+                }
+            }
+        }
+        
         // Não inicializar o roteador aqui, apenas disparar um evento para atualizar a UI
         if (routerInitialized) {
             window.dispatchEvent(new Event('auth-state-changed'));
@@ -43,6 +65,28 @@ document.addEventListener('DOMContentLoaded', () => {
             header.classList.remove('scrolled');
             header.style.background = 'transparent';
         }
+    });
+
+    // Adicionar evento de redimensionamento da janela
+    window.addEventListener('resize', () => {
+        // Reposicionar elementos dinâmicos quando a janela for redimensionada
+        Object.entries(dynamicElements).forEach(([key, element]) => {
+            if (element && element.offsetWidth && element.offsetHeight) {
+                // Não reposicionar elementos da página inicial (introText e introVideo)
+                const isHomeElement = key === 'introText' || key === 'introVideo';
+                
+                if (!isHomeElement) {
+                    const headerHeight = document.getElementById('header')?.offsetHeight || 0;
+                    const baseX = window.innerWidth / 2 - element.offsetWidth / 2;
+                    const baseY = headerHeight + 20;
+                    element.dataset.baseX = baseX.toString();
+                    element.dataset.baseY = baseY.toString();
+                    element.style.position = "absolute";
+                    element.style.left = baseX + "px";
+                    element.style.top = baseY + "px";
+                }
+            }
+        });
     });
 
     // Inicializar o roteador apenas uma vez

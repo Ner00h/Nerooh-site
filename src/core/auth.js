@@ -563,10 +563,23 @@ function showNotification(message) {
     }, 3000);
 }
 
-export function isAuthenticated() {
-    return !!currentUser || !!auth.currentUser;
+export function getCurrentUser() {
+    return currentUser;
 }
 
-export function getCurrentUser() {
-    return currentUser || auth.currentUser;
+export function isAdmin() {
+    const user = getCurrentUser();
+    console.log("Verificando admin:", user ? user.email : "Usuário não logado");
+    
+    // Lista de emails de administradores
+    const adminEmails = [
+        'nerooh.extremeh@gmail.com',
+        'erikabms1212@gmail.com'
+    ];
+    
+    return user && adminEmails.includes(user.email);
+}
+
+export function isAuthenticated() {
+    return !!currentUser || !!auth.currentUser;
 }

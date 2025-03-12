@@ -1,3 +1,5 @@
+import { getDatabase, ref, onValue } from 'firebase/database';
+
 export function renderProductsPage(contentDiv) {
     contentDiv.innerHTML = ''; // Limpa o conteúdo anterior
 
@@ -21,92 +23,12 @@ export function renderProductsPage(contentDiv) {
     // Lista de produtos
     const productsList = document.createElement("div");
     productsList.classList.add("products-list");
-
-    // Função para criar um card de produto
-    function createProductCard(title, description, price, imageUrl, link) {
-        const card = document.createElement("div");
-        card.classList.add("product-card");
-
-        const productImage = document.createElement("div");
-        productImage.classList.add("product-image");
-        if (imageUrl) {
-            const img = document.createElement("img");
-            img.src = imageUrl;
-            img.alt = title;
-            productImage.appendChild(img);
-        } else {
-            productImage.textContent = "📦";
-        }
-        card.appendChild(productImage);
-
-        const productInfo = document.createElement("div");
-        productInfo.classList.add("product-info");
-
-        const productTitle = document.createElement("h3");
-        productTitle.textContent = title;
-        productInfo.appendChild(productTitle);
-
-        const productDesc = document.createElement("p");
-        productDesc.textContent = description;
-        productInfo.appendChild(productDesc);
-
-        const productPrice = document.createElement("div");
-        productPrice.classList.add("product-price");
-        productPrice.textContent = price;
-        productInfo.appendChild(productPrice);
-
-        if (link) {
-            const buyButton = document.createElement("a");
-            buyButton.href = link;
-            buyButton.classList.add("buy-button");
-            buyButton.textContent = "Comprar";
-            buyButton.target = "_blank";
-            productInfo.appendChild(buyButton);
-        }
-
-        card.appendChild(productInfo);
-        productsList.appendChild(card);
-    }
-
-    // Adicionar produtos
-    const products = [
-        {
-            title: "Filamento PLA+",
-            description: "Filamento de alta qualidade para impressões 3D.",
-            price: "R$ 89,90",
-            imageUrl: null,
-            link: null
-        },
-        {
-            title: "Impressora 3D Custom",
-            description: "Impressora personalizada para projetos avançados.",
-            price: "R$ 2.499,00",
-            imageUrl: null,
-            link: null
-        },
-        {
-            title: "Kit de Ferramentas",
-            description: "Ferramentas essenciais para manutenção de impressoras.",
-            price: "R$ 149,90",
-            imageUrl: null,
-            link: null
-        }
-    ];
-
-    products.forEach(product => {
-        createProductCard(
-            product.title,
-            product.description,
-            product.price,
-            product.imageUrl,
-            product.link
-        );
-    });
-
     productsContainer.appendChild(productsList);
+    
+    // Adicionar o container ao DOM antes de carregar os dados
     contentDiv.appendChild(productsContainer);
-
-    // Posicionamento inicial centralizado como em contact.js
+    
+    // Posicionamento inicial centralizado - definido ANTES do carregamento dos dados
     const header = document.getElementById('header');
     const headerHeight = header ? header.offsetHeight : 0;
     const baseX = window.innerWidth / 2 - productsContainer.offsetWidth / 2;
@@ -117,6 +39,103 @@ export function renderProductsPage(contentDiv) {
     productsContainer.style.top = baseY + "px";
     productsContainer.dataset.baseX = baseX;
     productsContainer.dataset.baseY = baseY;
+
+    // Função para ajustar a posição do container
+    function adjustContainerPosition() {
+        const updatedBaseX = window.innerWidth / 2 - productsContainer.offsetWidth / 2;
+        productsContainer.style.left = updatedBaseX + "px";
+        productsContainer.dataset.baseX = updatedBaseX;
+    }
+
+    // Ajustar posição após um curto período para garantir que o DOM foi renderizado
+    setTimeout(adjustContainerPosition, 50);
+
+    // Carregar produtos do Firebase
+    const db = getDatabase();
+    const productsRef = ref(db, 'products');
+    
+    onValue(productsRef, (snapshot) => {
+        productsList.innerHTML = ''; // Limpar lista antes de adicionar produtos
+        
+        const products = snapshot.val() || {};
+        
+        if (Object.keys(products).length === 0) {
+            // Se não houver produtos, mostrar mensagem
+            const emptyMessage = document.createElement("p");
+            emptyMessage.textContent = "Nenhum produto disponível no momento.";
+            emptyMessage.style.textAlign = "center";
+            emptyMessage.style.padding = "20px";
+            productsList.appendChild(emptyMessage);
+        } else {
+            // Adicionar produtos do Firebase
+            Object.entries(products).forEach(([id, product]) => {
+                createProductCard(id, product);
+            });
+        }
+        
+        // Ajustar posição após o carregamento dos dados
+        // Isso garante que o container esteja centralizado mesmo após adicionar conteúdo
+        setTimeout(adjustContainerPosition, 100);
+    });
+
+    // Função para criar um card de produto
+    function createProductCard(id, product) {
+        const card = document.createElement("div");
+        card.classList.add("product-card");
+
+        const productImage = document.createElement("div");
+        productImage.classList.add("product-image");
+        if (product.imageUrl) {
+            const img = document.createElement("img");
+            img.src = product.imageUrl;
+            img.alt = product.title;
+            productImage.appendChild(img);
+        } else {
+            productImage.textContent = "📦";
+        }
+        card.appendChild(productImage);
+
+        const productInfo = document.createElement("div");
+        productInfo.classList.add("product-info");
+
+        const productTitle = document.createElement("h3");
+        productTitle.textContent = product.title;
+        productInfo.appendChild(productTitle);
+
+        const productDesc = document.createElement("p");
+        productDesc.textContent = product.description;
+        productInfo.appendChild(productDesc);
+
+        const productPrice = document.createElement("div");
+        productPrice.classList.add("product-price");
+        productPrice.textContent = product.price || "Preço sob consulta";
+        productInfo.appendChild(productPrice);
+
+        // Botão para ver detalhes do produto
+        const detailsButton = document.createElement("a");
+        detailsButton.href = `/produtos/${id}`;
+        detailsButton.classList.add("view-more-btn");
+        detailsButton.textContent = "Ver detalhes";
+        detailsButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            history.pushState({ page: 'productDetail', id }, null, `/produtos/${id}`);
+            window.dispatchEvent(new Event('route-change'));
+        });
+        productInfo.appendChild(detailsButton);
+
+        // Botão de compra, se houver link
+        if (product.link) {
+            const buyButton = document.createElement("a");
+            buyButton.href = product.link;
+            buyButton.classList.add("buy-button");
+            buyButton.textContent = "Comprar";
+            buyButton.target = "_blank";
+            productInfo.appendChild(buyButton);
+        }
+
+        card.appendChild(productInfo);
+        productsList.appendChild(card);
+    }
 
     return {
         cleanup: () => productsContainer.remove(),

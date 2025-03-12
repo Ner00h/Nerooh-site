@@ -74,8 +74,23 @@ export function animateBackground(stars, planets, dynamicElements = {}) {
         });
 
         // Atualizar todos os dynamicElements (como productsContainer e projectsContainer)
-        Object.values(dynamicElements).forEach(element => {
+        Object.entries(dynamicElements).forEach(([key, element]) => {
             if (!element || !element.offsetWidth || !element.offsetHeight) return;
+            
+            // Não reposicionar elementos da página inicial (introText e introVideo)
+            const isHomeElement = key === 'introText' || key === 'introVideo';
+            
+            // Verificar se baseX e baseY já foram definidos
+            if (!element.dataset.baseX || !element.dataset.baseY) {
+                // Definir posição base inicial se não existir
+                if (!isHomeElement) {
+                    const headerHeight = document.getElementById('header')?.offsetHeight || 0;
+                    element.dataset.baseX = (window.innerWidth / 2 - element.offsetWidth / 2).toString();
+                    element.dataset.baseY = (headerHeight + 20).toString();
+                    element.style.position = "absolute";
+                }
+            }
+            
             const baseX = parseFloat(element.dataset.baseX);
             const baseY = parseFloat(element.dataset.baseY);
             const randomDx = parseFloat(element.dataset.randomX) || 0;
@@ -87,6 +102,24 @@ export function animateBackground(stars, planets, dynamicElements = {}) {
         });
     }
 
+    // Executar updatePositions imediatamente para posicionar os elementos corretamente
+    updatePositions(null, null);
+
+    // Executar updatePositions novamente após um curto período para garantir que os elementos estejam posicionados corretamente
+    setTimeout(() => {
+        updatePositions(null, null);
+    }, 100);
+
+    // Executar updatePositions novamente após o carregamento completo da página
+    window.addEventListener('load', () => {
+        updatePositions(null, null);
+        
+        // Executar novamente após um curto período para garantir que todos os elementos foram carregados
+        setTimeout(() => {
+            updatePositions(null, null);
+        }, 200);
+    });
+
     setInterval(() => {
         stars.forEach(star => {
             star.dataset.randomX = (Math.random() - 0.5) * 10;
@@ -96,7 +129,7 @@ export function animateBackground(stars, planets, dynamicElements = {}) {
             planet.dataset.randomX = (Math.random() - 0.5) * 10;
             planet.dataset.randomY = (Math.random() - 0.5) * 10;
         });
-        Object.values(dynamicElements).forEach(element => {
+        Object.entries(dynamicElements).forEach(([key, element]) => {
             if (element) {
                 element.dataset.randomX = (Math.random() - 0.5) * 10;
                 element.dataset.randomY = (Math.random() - 0.5) * 10;
@@ -114,6 +147,26 @@ export function animateBackground(stars, planets, dynamicElements = {}) {
     });
 
     document.addEventListener('routeChange', () => {
+        updatePositions(null, null);
+    });
+
+    // Adicionar evento de redimensionamento da janela
+    window.addEventListener('resize', () => {
+        // Recalcular a posição base de todos os elementos dinâmicos
+        Object.entries(dynamicElements).forEach(([key, element]) => {
+            if (element && element.offsetWidth && element.offsetHeight) {
+                // Não reposicionar elementos da página inicial (introText e introVideo)
+                const isHomeElement = key === 'introText' || key === 'introVideo';
+                
+                if (!isHomeElement) {
+                    const headerHeight = document.getElementById('header')?.offsetHeight || 0;
+                    element.dataset.baseX = (window.innerWidth / 2 - element.offsetWidth / 2).toString();
+                    element.dataset.baseY = (headerHeight + 20).toString();
+                }
+            }
+        });
+        
+        // Atualizar posições após recalcular
         updatePositions(null, null);
     });
 

@@ -1,3 +1,5 @@
+import { getDatabase, ref, onValue } from 'firebase/database';
+
 export function renderProjectsPage(contentDiv) {
     contentDiv.innerHTML = ''; // Limpa o conteúdo anterior
 
@@ -5,6 +7,7 @@ export function renderProjectsPage(contentDiv) {
     projectsContainer.classList.add("projects-container");
     projectsContainer.style.paddingTop = "5px";
     projectsContainer.style.marginTop = "5px";
+    contentDiv.appendChild(projectsContainer);
 
     // Título da página
     const title = document.createElement("h1");
@@ -21,9 +24,42 @@ export function renderProjectsPage(contentDiv) {
     // Lista de projetos
     const projectsList = document.createElement("div");
     projectsList.classList.add("projects-list");
+    projectsContainer.appendChild(projectsList);
+
+    // Carregar projetos do Firebase
+    const db = getDatabase();
+    const projectsRef = ref(db, 'projects');
+    
+    onValue(projectsRef, (snapshot) => {
+        projectsList.innerHTML = ''; // Limpar lista antes de recarregar
+        const projects = snapshot.val() || {};
+        
+        if (Object.keys(projects).length === 0) {
+            const noProjectsMessage = document.createElement("p");
+            noProjectsMessage.textContent = "Nenhum projeto encontrado.";
+            noProjectsMessage.classList.add("no-projects-message");
+            projectsList.appendChild(noProjectsMessage);
+        } else {
+            Object.entries(projects).forEach(([id, project]) => {
+                createProjectCard(id, project);
+            });
+        }
+        
+        // Posicionamento inicial centralizado
+        const header = document.getElementById('header');
+        const headerHeight = header ? header.offsetHeight : 0;
+        const baseX = window.innerWidth / 2 - projectsContainer.offsetWidth / 2;
+        const baseY = headerHeight + 5; // Logo abaixo do header
+
+        projectsContainer.style.position = "absolute";
+        projectsContainer.style.left = baseX + "px";
+        projectsContainer.style.top = baseY + "px";
+        projectsContainer.dataset.baseX = baseX;
+        projectsContainer.dataset.baseY = baseY;
+    });
 
     // Função para criar um card de projeto horizontal
-    function createProjectCard(project) {
+    function createProjectCard(id, project) {
         const card = document.createElement("div");
         card.classList.add("project-card");
         // Adicionar cursor pointer para indicar que é clicável
@@ -31,7 +67,7 @@ export function renderProjectsPage(contentDiv) {
         
         // Adicionar evento de clique para navegar para a página de detalhes
         card.addEventListener("click", () => {
-            history.pushState({ page: 'project-detail', projectId: project.id }, null, `/projetos/${project.id}`);
+            history.pushState({ page: 'project-detail', projectId: id }, null, `/projetos/${id}`);
             window.dispatchEvent(new Event('route-change'));
         });
 
@@ -74,60 +110,13 @@ export function renderProjectsPage(contentDiv) {
 
         const progressBar = document.createElement("div");
         progressBar.classList.add("progress-bar");
-        progressBar.style.width = `${project.progress}%`; // Progresso inicial (0-100)
+        progressBar.style.width = `${project.progress || 0}%`; // Progresso inicial (0-100)
         progressBarContainer.appendChild(progressBar);
 
         card.appendChild(progressBarContainer);
 
         projectsList.appendChild(card);
     }
-
-    // Adicionar projetos
-    const projects = [
-        {
-            id: "site-pessoal",
-            title: "Site Pessoal",
-            description: "Meu site pessoal desenvolvido com JavaScript puro, HTML e CSS.",
-            imageUrl: null,
-            link: "/",
-            progress: 100 // Exemplo: 100% concluído
-        },
-        {
-            id: "impressao-3d",
-            title: "Projeto de Impressão 3D",
-            description: "Sistema de gerenciamento para impressoras 3D com monitoramento remoto.",
-            imageUrl: null,
-            link: null,
-            progress: 70 // Exemplo: 70% concluído
-        },
-        {
-            id: "app-notas",
-            title: "Aplicativo de Notas",
-            description: "Aplicativo para gerenciamento de notas e tarefas diárias.",
-            imageUrl: null,
-            link: null,
-            progress: 30 // Exemplo: 30% concluído
-        }
-    ];
-
-    projects.forEach(project => {
-        createProjectCard(project);
-    });
-
-    projectsContainer.appendChild(projectsList);
-    contentDiv.appendChild(projectsContainer);
-
-    // Posicionamento inicial centralizado como em contact.js
-    const header = document.getElementById('header');
-    const headerHeight = header ? header.offsetHeight : 0;
-    const baseX = window.innerWidth / 2 - projectsContainer.offsetWidth / 2;
-    const baseY = headerHeight + 5; // Logo abaixo do header
-
-    projectsContainer.style.position = "absolute";
-    projectsContainer.style.left = baseX + "px";
-    projectsContainer.style.top = baseY + "px";
-    projectsContainer.dataset.baseX = baseX;
-    projectsContainer.dataset.baseY = baseY;
 
     return {
         cleanup: () => projectsContainer.remove(),
