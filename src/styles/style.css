@@ -22,6 +22,7 @@ header {
   align-items: center;
   transition: background 0.3s ease;
   background: transparent;
+  min-height: 60px; /* Garantir altura mínima */
 }
 
 header.scrolled {
@@ -163,6 +164,7 @@ header.scrolled {
   min-height: 100vh;
   z-index: 1;
   position: relative;
+  padding-top: 70px; /* Adicionar padding-top para evitar que o conteúdo fique atrás do header */
 }
 
 .intro-text {
@@ -3262,5 +3264,250 @@ header.scrolled {
   }
   100% {
     background-position: 300% 0%;
+  }
+}
+
+/* Responsividade para o header */
+@media (max-width: 768px) {
+    header {
+        padding: 5px 10px;
+        flex-wrap: wrap;
+    }
+    
+    .logo-container {
+        margin-right: 10px;
+    }
+    
+    .nav-menu {
+        margin-right: 0;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    
+    .nav-item {
+        margin-left: 5px;
+        margin-bottom: 5px;
+        padding: 6px 10px;
+        font-size: 0.8em;
+    }
+}
+
+@media (max-width: 480px) {
+    header {
+        padding: 5px;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .logo-container {
+        margin-bottom: 5px;
+        text-align: center;
+    }
+    
+    .nav-menu {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .nav-item {
+        margin: 3px;
+        padding: 5px 8px;
+        font-size: 0.75em;
+    }
+    
+    .user-avatar {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .dropdown-menu {
+        width: 200px;
+        right: -70px;
+    }
+    
+    .container {
+        padding-top: 90px; /* Aumentar o padding-top para telas menores */
+    }
+}
+
+/* Para telas muito pequenas */
+@media (max-width: 360px) {
+    header {
+        min-height: 80px; /* Aumentar altura mínima */
+        padding: 8px 5px;
+    }
+    
+    .nav-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .nav-item {
+        margin: 2px;
+        padding: 4px 6px;
+        font-size: 0.7em;
+    }
+    
+    .logo {
+        width: 40px;
+    }
+    
+    .typing-text {
+        font-size: 0.55em;
+    }
+    
+    .container {
+        padding-top: 110px; /* Aumentar ainda mais o padding-top para telas muito pequenas */
+    }
+}
+
+/* Estilos para a seção de destaques */
+.home-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+.highlights-section {
+  width: 100%;
+  padding: 80px 20px;
+  margin-top: 1200px;
+  background: linear-gradient(to bottom, rgba(10, 10, 26, 0.8), rgba(10, 10, 26, 0.95));
+  position: relative;
+  z-index: 10;
+}
+
+.highlights-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.highlights-container h2 {
+  font-size: 2.5rem;
+  margin-bottom: 50px;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(100, 100, 255, 0.5);
+}
+
+.highlight-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+}
+
+.highlight-card {
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.6), rgba(20, 20, 40, 0.8));
+  border-radius: 15px;
+  padding: 30px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.highlight-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3498db, #9b59b6, #3498db);
+  background-size: 200% 100%;
+  animation: gradientBorder 3s linear infinite;
+}
+
+.highlight-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+}
+
+.highlight-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3498db, #9b59b6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.highlight-icon i {
+  font-size: 30px;
+  color: white;
+}
+
+.highlight-content {
+  text-align: center;
+}
+
+.highlight-content h3 {
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  color: #fff;
+}
+
+.highlight-content p {
+  font-size: 1rem;
+  color: #ccc;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.highlight-link {
+  display: inline-block;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #3498db, #9b59b6);
+  color: white;
+  text-decoration: none;
+  border-radius: 25px;
+  font-weight: bold;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.highlight-link:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 768px) {
+  .highlight-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .highlight-card {
+    width: 100%;
+    max-width: 350px;
+  }
+  
+  .highlights-section {
+    margin-top: 800px;
+    padding: 60px 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .highlights-container h2 {
+    font-size: 2rem;
+  }
+  
+  .highlight-card {
+    padding: 20px;
+  }
+  
+  .highlights-section {
+    margin-top: 600px;
+    padding: 40px 10px;
   }
 }
