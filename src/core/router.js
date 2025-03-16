@@ -7,6 +7,8 @@ import { renderProductsPage } from '../pages/products.js';
 import { renderProjectDetailPage } from '../pages/projectDetail.js';
 import { renderProductDetailPage } from '../pages/productDetail.js';
 import { renderAdminPage } from '../pages/admin.js';
+import { renderCartPage } from '../pages/cart.js';
+import { renderCheckoutPage } from '../pages/checkout.js';
 import { isAuthenticated, isAdmin } from './auth.js';
 
 // Exportar setupEventListeners para poder ser usado no main.js
@@ -30,6 +32,8 @@ export function initRouter(contentDiv, updateDynamicElements, getAuthStatus) {
         '/contato': () => renderContactPage(contentDiv),
         '/projetos': () => renderProjectsPage(contentDiv),
         '/produtos': () => renderProductsPage(contentDiv),
+        '/carrinho': () => renderCartPage(contentDiv),
+        '/checkout': () => renderCheckoutPage(contentDiv),
         '/admin': () => {
             console.log("Tentando acessar a rota de admin, isAdmin():", isAdmin());
             if (!isAdmin()) {
@@ -40,12 +44,25 @@ export function initRouter(contentDiv, updateDynamicElements, getAuthStatus) {
         },
         '/login': (message) => {
             if (getAuthStatus()) {
+                // Se o usuário já estiver logado e houver um returnTo no estado, redirecionar para lá
+                if (history.state && history.state.returnTo) {
+                    const returnTo = history.state.returnTo;
+                    history.pushState({ page: returnTo }, null, `/${returnTo}`);
+                    return routes[`/${returnTo}`]();
+                }
+                // Caso contrário, redirecionar para a página de controle
                 history.pushState({ page: 'control' }, null, '/controle');
                 return renderControlPage(contentDiv);
             }
-            const loginMessage = message === 'controle' 
-                ? "Para ter acesso ao controle das impressoras, primeiro você precisa se logar."
-                : null;
+            
+            // Verificar se há uma mensagem no estado da história
+            let loginMessage = null;
+            if (history.state && history.state.message) {
+                loginMessage = history.state.message;
+            } else if (message === 'controle') {
+                loginMessage = "Para ter acesso ao controle das impressoras, primeiro você precisa se logar.";
+            }
+            
             return renderLoginPage(contentDiv, loginMessage);
         }
     };
@@ -54,6 +71,9 @@ export function initRouter(contentDiv, updateDynamicElements, getAuthStatus) {
 
     function loadRoute() {
         console.log('Carregando rota:', window.location.pathname);
+        
+        // Rolar a página para o topo quando uma nova rota for carregada
+        window.scrollTo(0, 0);
         
         // Limpar a página atual antes de carregar a nova
         if (currentCleanup) {
@@ -92,6 +112,9 @@ export function initRouter(contentDiv, updateDynamicElements, getAuthStatus) {
                         element.style.top = baseY + "px";
                     }
                 });
+                
+                // Disparar evento para atualizar o botão do carrinho
+                window.dispatchEvent(new CustomEvent('route-loaded', { detail: { path } }));
             }, 100);
             
             return;
@@ -120,6 +143,9 @@ export function initRouter(contentDiv, updateDynamicElements, getAuthStatus) {
                         element.style.top = baseY + "px";
                     }
                 });
+                
+                // Disparar evento para atualizar o botão do carrinho
+                window.dispatchEvent(new CustomEvent('route-loaded', { detail: { path } }));
             }, 100);
             
             return;
@@ -156,6 +182,9 @@ export function initRouter(contentDiv, updateDynamicElements, getAuthStatus) {
                     }
                 }
             });
+            
+            // Disparar evento para atualizar o botão do carrinho
+            window.dispatchEvent(new CustomEvent('route-loaded', { detail: { path } }));
         }, 100);
     }
 
@@ -169,6 +198,10 @@ export function initRouter(contentDiv, updateDynamicElements, getAuthStatus) {
             // Adicionar novo event listener
             oldLink.addEventListener('click', (e) => {
                 e.preventDefault();
+                
+                // Rolar a página para o topo antes de mudar de rota
+                window.scrollTo(0, 0);
+                
                 const page = oldLink.getAttribute('data-page');
                 const path = page === 'control' ? '/controle' : 
                              page === 'contact' ? '/contato' : 
@@ -189,6 +222,9 @@ export function initRouter(contentDiv, updateDynamicElements, getAuthStatus) {
             // Adicionar novo event listener
             oldButton.addEventListener('click', () => {
                 if (!getAuthStatus()) {
+                    // Rolar a página para o topo antes de mudar de rota
+                    window.scrollTo(0, 0);
+                    
                     history.pushState({ page: 'login' }, null, '/login');
                     loadRoute();
                 }
@@ -208,6 +244,10 @@ export function initRouter(contentDiv, updateDynamicElements, getAuthStatus) {
     // Escutar eventos de mudança de rota personalizada
     window.addEventListener('route-change', () => {
         console.log('Evento route-change recebido');
+        
+        // Rolar a página para o topo quando uma nova rota for carregada
+        window.scrollTo(0, 0);
+        
         loadRoute();
         
         // Disparar um evento para reposicionar os elementos após a mudança de rota
@@ -241,6 +281,10 @@ export function initRouter(contentDiv, updateDynamicElements, getAuthStatus) {
     // Escutar eventos de navegação do histórico
     window.addEventListener('popstate', () => {
         console.log('Evento popstate recebido');
+        
+        // Rolar a página para o topo quando o usuário usar os botões de navegação do navegador
+        window.scrollTo(0, 0);
+        
         loadRoute();
     });
 

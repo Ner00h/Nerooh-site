@@ -11,7 +11,7 @@ export function renderHomePage(contentDiv) {
     const h1 = document.createElement("h1");
     h1.textContent = "Olá, Mundo!";
     const p = document.createElement("p");
-    p.textContent = "Bem vindo ao meu canto na internet, aqui você Poderá acompanhar meus projetos, interagir com eles, contribuir, adquirir dos nossos produtos ou mesmo transformar a sua imaginação em objetos tangíveis.";
+    p.textContent = "Bem vindo ao meu canto na internet, aqui você pode acompanhar meus projetos, interagir com eles, contribuir, adquirir dos nossos produtos ou mesmo transformar a sua imaginação em objetos tangíveis.";
     introText.appendChild(h1);
     introText.appendChild(p);
     homeContainer.appendChild(introText);
@@ -19,7 +19,7 @@ export function renderHomePage(contentDiv) {
     // Posicionamento inicial do texto
     function positionIntroText() {
         const baseX = window.innerWidth / 2 - introText.offsetWidth / 2;
-        const baseY = window.innerHeight / 2 - introText.offsetHeight / 2;
+        const baseY = window.innerHeight / 2 - introText.offsetHeight / 2 - 100;
         introText.style.position = "absolute";
         introText.style.left = baseX + "px";
         introText.style.top = baseY + "px";
@@ -40,7 +40,7 @@ export function renderHomePage(contentDiv) {
     // Posicionamento inicial do vídeo
     function positionIntroVideo() {
         const videoBaseX = window.innerWidth / 2 - (window.innerWidth * 0.9) / 2;
-        const videoBaseY = window.innerHeight / 2 + 250;
+        const videoBaseY = window.innerHeight / 2 + 180;
         introVideo.style.position = "absolute";
         introVideo.style.left = videoBaseX + "px";
         introVideo.style.top = videoBaseY + "px";
@@ -116,6 +116,10 @@ export function renderHomePage(contentDiv) {
         // Adicionar event listener para navegação
         cardLink.addEventListener('click', (e) => {
             e.preventDefault();
+            
+            // Rolar a página para o topo antes de mudar de rota
+            window.scrollTo(0, 0);
+            
             const page = cardLink.getAttribute('data-page');
             const path = page === 'control' ? '/controle' : 
                          page === 'contact' ? '/contato' : 

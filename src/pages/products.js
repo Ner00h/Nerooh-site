@@ -1,4 +1,5 @@
 import { getDatabase, ref, onValue } from 'firebase/database';
+import { addToCart, renderMiniCart, getCart, onCartUpdate } from '../core/cart.js';
 
 export function renderProductsPage(contentDiv) {
     contentDiv.innerHTML = ''; // Limpa o conteúdo anterior
@@ -40,6 +41,15 @@ export function renderProductsPage(contentDiv) {
     productsContainer.dataset.baseX = baseX;
     productsContainer.dataset.baseY = baseY;
 
+    // Renderizar o mini-carrinho
+    const miniCart = renderMiniCart(contentDiv);
+    
+    // Inicialmente ocultar o mini-carrinho
+    miniCart.style.display = 'none';
+    
+    // Obter o ícone do carrinho existente
+    const cartIcon = document.querySelector('.cart-icon');
+    
     // Função para ajustar a posição do container
     function adjustContainerPosition() {
         const updatedBaseX = window.innerWidth / 2 - productsContainer.offsetWidth / 2;
@@ -118,10 +128,42 @@ export function renderProductsPage(contentDiv) {
         detailsButton.textContent = "Ver detalhes";
         detailsButton.addEventListener('click', (e) => {
             e.preventDefault();
+            
+            // Rolar a página para o topo antes de mudar de rota
+            window.scrollTo(0, 0);
+            
             history.pushState({ page: 'productDetail', id }, null, `/produtos/${id}`);
             window.dispatchEvent(new Event('route-change'));
         });
         productInfo.appendChild(detailsButton);
+
+        // Botão de adicionar ao carrinho
+        const addToCartButton = document.createElement("button");
+        addToCartButton.classList.add("add-to-cart-btn");
+        addToCartButton.textContent = "Adicionar ao Carrinho";
+        addToCartButton.addEventListener('click', () => {
+            // Adicionar o produto ao carrinho com o ID
+            addToCart({
+                id,
+                title: product.title,
+                price: product.price,
+                imageUrl: product.imageUrl
+            });
+            
+            // Mostrar o mini-carrinho após adicionar um produto
+            miniCart.style.display = 'flex';
+            
+            // Ocultar o mini-carrinho após 3 segundos
+            setTimeout(() => {
+                miniCart.style.display = 'none';
+            }, 3000);
+            
+            // Garantir que o botão do carrinho esteja visível em todas as páginas após adicionar um produto
+            if (window.updateCartIconVisibility) {
+                window.updateCartIconVisibility();
+            }
+        });
+        productInfo.appendChild(addToCartButton);
 
         // Botão de compra, se houver link
         if (product.link) {
@@ -138,7 +180,10 @@ export function renderProductsPage(contentDiv) {
     }
 
     return {
-        cleanup: () => productsContainer.remove(),
+        cleanup: () => {
+            productsContainer.remove();
+            miniCart.remove();
+        },
         elements: { productsContainer }
     };
 }

@@ -1,5 +1,6 @@
 import { getDatabase, ref, onValue } from 'firebase/database';
 import DOMPurify from 'dompurify';
+import { addToCart, renderMiniCart } from '../core/cart.js';
 
 export function renderProductDetailPage(contentDiv, productId) {
     contentDiv.innerHTML = ''; // Limpa o conteúdo anterior
@@ -16,6 +17,15 @@ export function renderProductDetailPage(contentDiv, productId) {
     productDetailContainer.style.position = "absolute";
     productDetailContainer.style.left = baseX + 'px';
     productDetailContainer.style.top = baseY + 'px';
+    
+    // Renderizar o mini-carrinho
+    const miniCart = renderMiniCart(contentDiv);
+    
+    // Inicialmente ocultar o mini-carrinho
+    miniCart.style.display = 'none';
+    
+    // Obter o ícone do carrinho existente
+    const cartIcon = document.querySelector('.cart-icon');
     
     // Função para ajustar a posição do container apenas quando necessário (redimensionamento)
     function adjustContainerPosition() {
@@ -43,6 +53,9 @@ export function renderProductDetailPage(contentDiv, productId) {
             
             // Adicionar evento ao botão de voltar
             document.getElementById("back-to-products").addEventListener("click", () => {
+                // Rolar a página para o topo antes de mudar de rota
+                window.scrollTo(0, 0);
+                
                 history.pushState({ page: 'products' }, null, '/produtos');
                 window.dispatchEvent(new Event('route-change'));
             });
@@ -99,6 +112,34 @@ export function renderProductDetailPage(contentDiv, productId) {
             
             infoSection.appendChild(description);
 
+            // Botão de adicionar ao carrinho
+            const addToCartButton = document.createElement("button");
+            addToCartButton.classList.add("add-to-cart-btn");
+            addToCartButton.textContent = "Adicionar ao Carrinho";
+            addToCartButton.addEventListener('click', () => {
+                // Adicionar o produto ao carrinho com o ID
+                addToCart({
+                    id: productId,
+                    title: product.title,
+                    price: product.price,
+                    imageUrl: product.imageUrl
+                });
+                
+                // Mostrar o mini-carrinho após adicionar um produto
+                miniCart.style.display = 'flex';
+                
+                // Ocultar o mini-carrinho após 3 segundos
+                setTimeout(() => {
+                    miniCart.style.display = 'none';
+                }, 3000);
+                
+                // Garantir que o botão do carrinho esteja visível em todas as páginas após adicionar um produto
+                if (window.updateCartIconVisibility) {
+                    window.updateCartIconVisibility();
+                }
+            });
+            infoSection.appendChild(addToCartButton);
+
             // Botão de compra
             if (product.link) {
                 const buySection = document.createElement("div");
@@ -139,6 +180,9 @@ export function renderProductDetailPage(contentDiv, productId) {
 
             // Evento do botão voltar
             productDetailContainer.querySelector('.back-button').addEventListener('click', () => {
+                // Rolar a página para o topo antes de mudar de rota
+                window.scrollTo(0, 0);
+                
                 history.pushState({ page: 'products' }, null, '/produtos');
                 window.dispatchEvent(new Event('route-change'));
             });
@@ -154,6 +198,7 @@ export function renderProductDetailPage(contentDiv, productId) {
     return {
         cleanup: () => {
             productDetailContainer.remove();
+            miniCart.remove();
             window.removeEventListener('resize', adjustContainerPosition);
         },
         elements: {} // Retornar um objeto elements vazio para que o container não seja adicionado ao dynamicElements

@@ -80,6 +80,9 @@ export function renderProjectsPage(contentDiv) {
         
         // Adicionar evento de clique para navegar para a página de detalhes
         card.addEventListener("click", () => {
+            // Rolar a página para o topo antes de mudar de rota
+            window.scrollTo(0, 0);
+            
             history.pushState({ page: 'project-detail', projectId: id }, null, `/projetos/${id}`);
             window.dispatchEvent(new Event('route-change'));
         });

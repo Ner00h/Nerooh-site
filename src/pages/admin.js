@@ -1,4 +1,4 @@
-import { getDatabase, ref, onValue, set, remove } from 'firebase/database';
+import { getDatabase, ref, onValue, set, remove, query, orderByChild } from 'firebase/database';
 import { isAdmin } from '../core/auth.js';
 import Quill from 'quill';
 import DOMPurify from 'dompurify';
@@ -8,8 +8,14 @@ export function renderAdminPage(contentDiv) {
 
     const adminPanel = document.createElement('div');
     adminPanel.classList.add('admin-panel');
+    
     adminPanel.innerHTML = `
         <h2>Painel de Administração</h2>
+        
+        <section id="sales-manager">
+            <h3>Gerenciar Vendas</h3>
+            <div id="sales-list-admin"></div>
+        </section>
         
         <section id="project-manager">
             <h3>Gerenciar Projetos</h3>
@@ -93,36 +99,607 @@ export function renderAdminPage(contentDiv) {
     `;
     contentDiv.appendChild(adminPanel);
 
-    // Posicionamento fixo (sem movimento para economizar processamento)
-    const baseX = window.innerWidth / 2 - adminPanel.offsetWidth / 2;
-    const headerHeight = document.getElementById('header').offsetHeight;
-    const baseY = headerHeight + 20;
-    adminPanel.style.position = "absolute";
-    adminPanel.style.left = baseX + 'px';
-    adminPanel.style.top = baseY + 'px';
-    
-    // Não adicionamos dataset.baseX e dataset.baseY para evitar movimento
-
     // Configurar gerenciadores
+    setupSalesManager();
     setupProjectManager();
     setupProductManager();
     setupSubpageEditor();
 
-    // Adicionar evento de redimensionamento da janela
-    function adjustContainerPosition() {
-        const updatedBaseX = window.innerWidth / 2 - adminPanel.offsetWidth / 2;
-        adminPanel.style.left = updatedBaseX + 'px';
-    }
-    
-    window.addEventListener('resize', adjustContainerPosition);
-
     return {
         cleanup: () => {
             adminPanel.remove();
-            window.removeEventListener('resize', adjustContainerPosition);
         },
         elements: {} // Retornar um objeto elements vazio para que o container não seja adicionado ao dynamicElements
     };
+}
+
+function setupSalesManager() {
+    const db = getDatabase();
+    const salesRef = ref(db, 'sales');
+    const salesListAdmin = document.getElementById('sales-list-admin');
+    
+    // Adicionar estilos CSS para a tabela de vendas
+    const style = document.createElement('style');
+    style.textContent = `
+        .sales-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background-color: rgba(30, 30, 50, 0.7);
+            border-radius: 4px;
+            overflow: hidden;
+            table-layout: fixed;
+        }
+        
+        .sales-table th, .sales-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(100, 100, 255, 0.2);
+            word-wrap: break-word;
+            overflow: hidden;
+            vertical-align: middle;
+        }
+        
+        /* Definir larguras específicas para cada coluna */
+        .sales-table th:nth-child(1),
+        .sales-table td:nth-child(1) {
+            width: 10%; /* Nº Pedido */
+        }
+        
+        .sales-table th:nth-child(2),
+        .sales-table td:nth-child(2) {
+            width: 12%; /* Data */
+        }
+        
+        .sales-table th:nth-child(3),
+        .sales-table td:nth-child(3) {
+            width: 18%; /* Cliente */
+        }
+        
+        .sales-table th:nth-child(4),
+        .sales-table td:nth-child(4) {
+            width: 10%; /* Total */
+        }
+        
+        .sales-table th:nth-child(5),
+        .sales-table td:nth-child(5) {
+            width: 38%; /* Status */
+            min-width: 250px; /* Garantir espaço mínimo para o status */
+        }
+        
+        .sales-table th:nth-child(6),
+        .sales-table td:nth-child(6) {
+            width: 12%; /* Ações */
+        }
+        
+        .sales-table th {
+            background-color: rgba(50, 50, 80, 0.8);
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .sales-table tr:hover {
+            background-color: rgba(50, 50, 80, 0.5);
+        }
+        
+        .sales-table .sales-status-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            min-height: 40px;
+            padding: 5px;
+        }
+        
+        .status-badge-container {
+            display: flex;
+            align-items: center;
+            min-width: 120px;
+            margin-right: 5px;
+        }
+        
+        .sales-table .status-badge {
+            padding: 6px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            display: inline-block;
+            min-width: 120px;
+            text-align: center;
+            overflow: visible;
+            box-sizing: border-box;
+        }
+        
+        .sales-table .status-aguardando {
+            background-color: #f0ad4e;
+            color: #000;
+            max-width: none;
+        }
+        
+        .sales-table .status-confirmado {
+            background-color: #5cb85c;
+            color: #fff;
+            max-width: none;
+        }
+        
+        .sales-table .status-enviado {
+            background-color: #5bc0de;
+            color: #fff;
+            max-width: none;
+        }
+        
+        .sales-table .status-cancelado {
+            background-color: #d9534f;
+            color: #fff;
+            max-width: none;
+        }
+        
+        .sales-table .status-select {
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid rgba(100, 100, 255, 0.3);
+            background-color: rgba(30, 30, 50, 0.8);
+            color: #fff;
+            margin-left: 10px;
+            max-width: 100%;
+            min-width: 180px;
+            height: 28px;
+            font-size: 12px;
+        }
+        
+        .sales-details-btn {
+            background-color: #3a3a8c;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+        
+        .sales-details-btn:hover {
+            background-color: #4a4aac;
+        }
+        
+        .sales-delete-btn {
+            background-color: #e25c5c;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .sales-delete-btn:hover {
+            background-color: #ff6b6b;
+        }
+        
+        .sales-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .sales-modal-content {
+            background-color: #1a1a2e;
+            border-radius: 8px;
+            padding: 20px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(90, 90, 255, 0.5);
+            border: 1px solid rgba(100, 100, 255, 0.3);
+        }
+        
+        .sales-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(100, 100, 255, 0.3);
+        }
+        
+        .sales-modal-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .sales-modal-items {
+            margin-bottom: 20px;
+        }
+        
+        .sales-modal-item {
+            display: flex;
+            padding: 10px;
+            border-bottom: 1px solid rgba(100, 100, 255, 0.2);
+        }
+        
+        .sales-modal-item:last-child {
+            border-bottom: none;
+        }
+        
+        .sales-modal-item-info {
+            flex: 1;
+        }
+        
+        .sales-modal-customer {
+            background-color: rgba(30, 30, 50, 0.7);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .sales-modal-customer p {
+            margin: 5px 0;
+        }
+        
+        .sales-modal-total {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: right;
+            margin-top: 15px;
+            color: #5a5aff;
+        }
+        
+        .sales-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .sales-filter select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(100, 100, 255, 0.3);
+            background-color: rgba(30, 30, 50, 0.8);
+            color: #fff;
+        }
+        
+        /* Wrapper para rolagem horizontal em telas menores */
+        .sales-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+        
+        /* Media query para telas menores */
+        @media (max-width: 768px) {
+            .sales-table {
+                min-width: 800px; /* Garante que a tabela não fique muito comprimida */
+            }
+            
+            .sales-table .sales-status-cell {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px 5px;
+            }
+            
+            .status-badge-container {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+            
+            .sales-table .status-badge {
+                width: 100%;
+                box-sizing: border-box;
+                padding: 8px 10px;
+                font-size: 13px;
+            }
+            
+            .sales-table .status-select {
+                margin-left: 0;
+                margin-top: 8px;
+                width: 100%;
+                min-width: 100%;
+                font-size: 13px;
+                height: 32px;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Criar filtro de status
+    const filterContainer = document.createElement('div');
+    filterContainer.classList.add('sales-filter');
+    filterContainer.innerHTML = `
+        <select id="sales-status-filter">
+            <option value="all">Todos os Status</option>
+            <option value="Pagamento pendente">Pagamento pendente</option>
+            <option value="Pagamento confirmado">Pagamento confirmado</option>
+            <option value="Enviado">Enviado</option>
+            <option value="Cancelado">Cancelado</option>
+        </select>
+    `;
+    salesListAdmin.appendChild(filterContainer);
+    
+    // Criar wrapper para a tabela
+    const tableWrapper = document.createElement('div');
+    tableWrapper.classList.add('sales-table-wrapper');
+    salesListAdmin.appendChild(tableWrapper);
+    
+    // Criar tabela para exibir as vendas
+    const salesTable = document.createElement('table');
+    salesTable.classList.add('sales-table');
+    salesTable.innerHTML = `
+        <thead>
+            <tr>
+                <th>Nº Pedido</th>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="sales-table-body">
+            <tr>
+                <td colspan="6" style="text-align: center;">Carregando vendas...</td>
+            </tr>
+        </tbody>
+    `;
+    tableWrapper.appendChild(salesTable);
+    
+    // Filtrar vendas por status
+    const statusFilter = document.getElementById('sales-status-filter');
+    statusFilter.addEventListener('change', () => {
+        loadSales(statusFilter.value);
+    });
+    
+    // Função para carregar as vendas
+    function loadSales(statusFilter = 'all') {
+        const salesQuery = query(salesRef, orderByChild('timestamp'));
+        
+        onValue(salesQuery, (snapshot) => {
+            const salesTableBody = document.getElementById('sales-table-body');
+            salesTableBody.innerHTML = '';
+            
+            const sales = [];
+            snapshot.forEach((childSnapshot) => {
+                const sale = {
+                    id: childSnapshot.key,
+                    ...childSnapshot.val()
+                };
+                sales.push(sale);
+            });
+            
+            // Ordenar vendas por data (mais recentes primeiro)
+            sales.sort((a, b) => {
+                const timeA = a.timestamp ? new Date(a.timestamp) : new Date(0);
+                const timeB = b.timestamp ? new Date(b.timestamp) : new Date(0);
+                return timeB - timeA;
+            });
+            
+            // Filtrar por status se necessário
+            const filteredSales = statusFilter === 'all' 
+                ? sales 
+                : sales.filter(sale => sale.status === statusFilter);
+            
+            if (filteredSales.length === 0) {
+                salesTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Nenhuma venda encontrada</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Renderizar cada venda na tabela
+            filteredSales.forEach(sale => {
+                const date = sale.timestamp 
+                    ? new Date(sale.timestamp).toLocaleDateString('pt-BR') 
+                    : 'Data não disponível';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>#${sale.orderNumber || ''}</td>
+                    <td>${date}</td>
+                    <td>${sale.customerName || sale.userEmail || 'Cliente não identificado'}</td>
+                    <td>R$ ${sale.total ? sale.total.toFixed(2) : '0.00'}</td>
+                    <td class="sales-status-cell">
+                        <div class="status-badge-container">
+                            <span class="status-badge status-${getStatusClass(sale.status)}">${sale.status}</span>
+                        </div>
+                        <select class="status-select" data-sale-id="${sale.id}">
+                            <option value="Pagamento pendente" ${sale.status === 'Pagamento pendente' ? 'selected' : ''}>Pagamento pendente</option>
+                            <option value="Pagamento confirmado" ${sale.status === 'Pagamento confirmado' ? 'selected' : ''}>Pagamento confirmado</option>
+                            <option value="Enviado" ${sale.status === 'Enviado' ? 'selected' : ''}>Enviado</option>
+                            <option value="Cancelado" ${sale.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="sales-details-btn" data-sale-id="${sale.id}">Detalhes</button>
+                        <button class="sales-delete-btn" data-sale-id="${sale.id}">Excluir</button>
+                    </td>
+                `;
+                salesTableBody.appendChild(row);
+            });
+            
+            // Adicionar eventos aos botões de detalhes e excluir
+            document.querySelectorAll('.sales-details-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const saleId = btn.dataset.saleId;
+                    const sale = sales.find(s => s.id === saleId);
+                    if (sale) {
+                        showSaleDetails(sale);
+                    }
+                });
+            });
+            
+            // Adicionar eventos aos botões de excluir
+            document.querySelectorAll('.sales-delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const saleId = btn.dataset.saleId;
+                    const sale = sales.find(s => s.id === saleId);
+                    if (sale && confirm(`Tem certeza que deseja excluir o pedido #${sale.orderNumber || saleId}?`)) {
+                        // Remover a venda do banco de dados
+                        remove(ref(db, `sales/${saleId}`))
+                            .then(() => {
+                                alert('Pedido excluído com sucesso!');
+                            })
+                            .catch(error => {
+                                console.error('Erro ao excluir pedido:', error);
+                                alert(`Erro ao excluir pedido: ${error.message}`);
+                            });
+                    }
+                });
+            });
+            
+            // Adicionar eventos aos selects de status
+            document.querySelectorAll('.status-select').forEach(select => {
+                select.addEventListener('change', () => {
+                    const saleId = select.dataset.saleId;
+                    const newStatus = select.value;
+                    updateSaleStatus(saleId, newStatus);
+                });
+            });
+        });
+    }
+    
+    // Função para atualizar o status de uma venda
+    function updateSaleStatus(saleId, newStatus) {
+        const saleRef = ref(db, `sales/${saleId}`);
+        
+        // Obter a venda atual
+        onValue(saleRef, (snapshot) => {
+            const sale = snapshot.val();
+            if (sale) {
+                // Atualizar apenas o status
+                set(saleRef, {
+                    ...sale,
+                    status: newStatus
+                })
+                .then(() => {
+                    console.log(`Status da venda ${saleId} atualizado para ${newStatus}`);
+                })
+                .catch(error => {
+                    console.error('Erro ao atualizar status da venda:', error);
+                    alert(`Erro ao atualizar status: ${error.message}`);
+                });
+            }
+        }, { onlyOnce: true });
+    }
+    
+    // Função para exibir os detalhes de uma venda
+    function showSaleDetails(sale) {
+        // Criar modal
+        const modal = document.createElement('div');
+        modal.classList.add('sales-modal');
+        
+        // Formatar data
+        const date = sale.timestamp 
+            ? new Date(sale.timestamp).toLocaleString('pt-BR') 
+            : 'Data não disponível';
+        
+        // Renderizar itens da venda
+        let itemsHtml = '';
+        if (sale.items && sale.items.length > 0) {
+            sale.items.forEach(item => {
+                // Garantir que o preço seja um número válido
+                let price = 0;
+                if (typeof item.price === 'number' && !isNaN(item.price)) {
+                    price = item.price;
+                } else if (typeof item.price === 'string') {
+                    // Tentar converter string para número
+                    const parsedPrice = parseFloat(item.price.replace(/[^\d,]/g, '').replace(',', '.'));
+                    if (!isNaN(parsedPrice)) {
+                        price = parsedPrice;
+                    }
+                }
+                
+                // Calcular subtotal
+                const subtotal = price * item.quantity;
+                
+                itemsHtml += `
+                    <div class="sales-modal-item">
+                        <div class="sales-modal-item-info">
+                            <h4>${item.title}</h4>
+                            <p>Preço: R$ ${price.toFixed(2)}</p>
+                            <p>Quantidade: ${item.quantity}</p>
+                            <p>Subtotal: R$ ${subtotal.toFixed(2)}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            itemsHtml = '<p>Nenhum item encontrado</p>';
+        }
+        
+        modal.innerHTML = `
+            <div class="sales-modal-content">
+                <div class="sales-modal-header">
+                    <h3>Detalhes do Pedido #${sale.orderNumber}</h3>
+                    <button class="sales-modal-close">&times;</button>
+                </div>
+                
+                <div class="sales-modal-customer">
+                    <h4>Informações do Cliente</h4>
+                    <p><strong>Nome:</strong> ${sale.customerName || 'Não informado'}</p>
+                    <p><strong>Email:</strong> ${sale.customerEmail || sale.userEmail || 'Não informado'}</p>
+                    <p><strong>Telefone:</strong> ${sale.customerPhone || 'Não informado'}</p>
+                    <p><strong>Endereço:</strong> ${sale.customerAddress || 'Não informado'}</p>
+                    <p><strong>Data do Pedido:</strong> ${date}</p>
+                    <p><strong>Status:</strong> ${sale.status}</p>
+                </div>
+                
+                <div class="sales-modal-items">
+                    <h4>Itens do Pedido</h4>
+                    ${itemsHtml}
+                </div>
+                
+                <div class="sales-modal-total">
+                    Total: R$ ${sale.total ? sale.total.toFixed(2) : '0.00'}
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Adicionar evento para fechar o modal
+        modal.querySelector('.sales-modal-close').addEventListener('click', () => {
+            modal.remove();
+        });
+        
+        // Fechar o modal ao clicar fora dele
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+    }
+    
+    // Função auxiliar para obter a classe CSS do status
+    function getStatusClass(status) {
+        switch (status) {
+            case 'Pagamento pendente':
+                return 'aguardando';
+            case 'Pagamento confirmado':
+                return 'confirmado';
+            case 'Enviado':
+                return 'enviado';
+            case 'Cancelado':
+                return 'cancelado';
+            default:
+                return 'aguardando';
+        }
+    }
+    
+    // Carregar vendas inicialmente
+    loadSales();
 }
 
 function setupProjectManager() {
@@ -225,18 +802,16 @@ function editProject(id) {
     
     onValue(projectRef, (snapshot) => {
         const project = snapshot.val();
-        if (!project) return;
-        
-        // Preencher o formulário com os dados do projeto
-        document.getElementById('project-title').value = project.title || '';
-        document.getElementById('project-description').value = project.description || '';
-        document.getElementById('project-image').value = project.imageUrl || '';
-        document.getElementById('project-progress').value = project.progress || 0;
-        document.getElementById('project-id').value = id;
-        
-        // Mostrar o formulário
-        document.getElementById('project-form-container').style.display = 'block';
-        document.getElementById('add-project-btn').style.display = 'none';
+        if (project) {
+            document.getElementById('project-title').value = project.title;
+            document.getElementById('project-description').value = project.description;
+            document.getElementById('project-image').value = project.imageUrl;
+            document.getElementById('project-progress').value = project.progress;
+            document.getElementById('project-id').value = id;
+            
+            document.getElementById('project-form-container').style.display = 'block';
+            document.getElementById('add-project-btn').style.display = 'none';
+        }
     }, { onlyOnce: true });
 }
 
@@ -248,6 +823,36 @@ function setupProductManager() {
     const productForm = document.getElementById('product-form');
     const addProductBtn = document.getElementById('add-product-btn');
     const cancelProductBtn = document.getElementById('cancel-product');
+
+    // Aplicar estilos inline para garantir que o botão tenha o mesmo estilo que o botão de adicionar projeto
+    addProductBtn.style.background = 'linear-gradient(135deg, #4a90e2, #845ec2)';
+    addProductBtn.style.color = 'white';
+    addProductBtn.style.border = 'none';
+    addProductBtn.style.padding = '8px 15px';
+    addProductBtn.style.borderRadius = '5px';
+    addProductBtn.style.cursor = 'pointer';
+    addProductBtn.style.fontWeight = 'bold';
+    addProductBtn.style.marginBottom = '15px';
+    addProductBtn.style.transition = 'all 0.3s ease';
+    addProductBtn.style.position = 'static';
+    addProductBtn.style.overflow = 'hidden';
+
+    // Adicionar eventos para o hover do botão
+    addProductBtn.addEventListener('mouseover', () => {
+        addProductBtn.style.transform = 'translateY(-2px)';
+        addProductBtn.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)';
+    });
+    
+    addProductBtn.addEventListener('mouseout', () => {
+        addProductBtn.style.transform = 'none';
+        addProductBtn.style.boxShadow = 'none';
+    });
+
+    // Aplicar estilos inline ao container do formulário de produto
+    productFormContainer.style.background = 'rgba(0, 0, 0, 0.3)';
+    productFormContainer.style.padding = '15px';
+    productFormContainer.style.borderRadius = '8px';
+    productFormContainer.style.margin = '15px 0';
 
     // Mostrar formulário para adicionar novo produto
     addProductBtn.addEventListener('click', () => {
@@ -279,8 +884,8 @@ function setupProductManager() {
             title,
             description,
             price,
-            imageUrl: imageUrl || null,
-            link: link || null
+            imageUrl,
+            link
         };
         
         let productRef;
@@ -309,9 +914,9 @@ function setupProductManager() {
         const products = snapshot.val() || {};
         Object.entries(products).forEach(([id, product]) => {
             const productDiv = document.createElement('div');
-            productDiv.classList.add('admin-project-item'); // Reutilizando o estilo dos projetos
+            productDiv.classList.add('admin-project-item');
             productDiv.innerHTML = `
-                <h4>${product.title} - ${product.price}</h4>
+                <h4>${product.title} - R$ ${product.price}</h4>
                 <div class="admin-project-buttons">
                     <button class="edit-btn" data-id="${id}">Editar</button>
                     <button class="delete-btn" data-id="${id}">Excluir</button>
@@ -328,8 +933,6 @@ function setupProductManager() {
             btn.addEventListener('click', () => {
                 if (confirm(`Tem certeza que deseja excluir o produto "${products[btn.dataset.id].title}"?`)) {
                     remove(ref(db, `products/${btn.dataset.id}`));
-                    // Também remover a subpágina associada, se existir
-                    remove(ref(db, `productSubpages/${btn.dataset.id}`));
                 }
             });
         });
@@ -342,19 +945,17 @@ function editProduct(id) {
     
     onValue(productRef, (snapshot) => {
         const product = snapshot.val();
-        if (!product) return;
-        
-        // Preencher o formulário com os dados do produto
-        document.getElementById('product-title').value = product.title || '';
-        document.getElementById('product-description').value = product.description || '';
-        document.getElementById('product-price').value = product.price || '';
-        document.getElementById('product-image').value = product.imageUrl || '';
-        document.getElementById('product-link').value = product.link || '';
-        document.getElementById('product-id').value = id;
-        
-        // Mostrar o formulário
-        document.getElementById('product-form-container').style.display = 'block';
-        document.getElementById('add-product-btn').style.display = 'none';
+        if (product) {
+            document.getElementById('product-title').value = product.title;
+            document.getElementById('product-description').value = product.description;
+            document.getElementById('product-price').value = product.price;
+            document.getElementById('product-image').value = product.imageUrl;
+            document.getElementById('product-link').value = product.link;
+            document.getElementById('product-id').value = id;
+            
+            document.getElementById('product-form-container').style.display = 'block';
+            document.getElementById('add-product-btn').style.display = 'none';
+        }
     }, { onlyOnce: true });
 }
 

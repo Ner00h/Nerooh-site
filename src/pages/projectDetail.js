@@ -43,6 +43,9 @@ export function renderProjectDetailPage(contentDiv, projectId) {
             
             // Adicionar evento ao botão de voltar
             document.getElementById("back-to-projects").addEventListener("click", () => {
+                // Rolar a página para o topo antes de mudar de rota
+                window.scrollTo(0, 0);
+                
                 history.pushState({ page: 'projects' }, null, '/projetos');
                 window.dispatchEvent(new Event('route-change'));
             });
@@ -91,6 +94,9 @@ export function renderProjectDetailPage(contentDiv, projectId) {
 
             // Evento do botão voltar
             projectDetailContainer.querySelector('.back-button').addEventListener('click', () => {
+                // Rolar a página para o topo antes de mudar de rota
+                window.scrollTo(0, 0);
+                
                 history.pushState({ page: 'projects' }, null, '/projetos');
                 window.dispatchEvent(new Event('route-change'));
             });

@@ -5,6 +5,11 @@ import { renderControlPage } from './control.js';
 export function renderLoginPage(contentDiv, message = null) {
     contentDiv.innerHTML = ''; // Limpar conteúdo anterior
 
+    // Verificar se há um returnTo no estado da história e armazená-lo no localStorage
+    if (history.state && history.state.returnTo) {
+        localStorage.setItem('loginReturnTo', history.state.returnTo);
+    }
+
     const loginPage = document.createElement("div");
     loginPage.classList.add("login-page");
 
@@ -134,17 +139,35 @@ export function renderLoginPage(contentDiv, message = null) {
         
         contentDiv.appendChild(successContainer);
         
-        // Após 1.5 segundos, redirecionar para a página de controle
+        // Após 1.5 segundos, redirecionar para a página apropriada
         setTimeout(() => {
-            // Atualizar a URL
-            history.pushState({ page: 'control' }, null, '/controle');
+            // Verificar se há um returnTo no estado da história ou no localStorage
+            const returnTo = (history.state && history.state.returnTo) || localStorage.getItem('loginReturnTo');
             
-            // Limpar o conteúdo novamente
-            contentDiv.innerHTML = '';
-            
-            // Renderizar a página de controle
-            const { cleanup, elements } = renderControlPage(contentDiv);
-            return { cleanup, elements };
+            if (returnTo) {
+                // Limpar o returnTo do localStorage
+                localStorage.removeItem('loginReturnTo');
+                
+                // Atualizar a URL
+                history.pushState({ page: returnTo }, null, `/${returnTo}`);
+                
+                // Limpar o conteúdo novamente
+                contentDiv.innerHTML = '';
+                
+                // Disparar evento de mudança de rota para que o router carregue a página correta
+                window.dispatchEvent(new Event('route-change'));
+            } else {
+                // Caso não haja returnTo, redirecionar para a página de controle
+                // Atualizar a URL
+                history.pushState({ page: 'control' }, null, '/controle');
+                
+                // Limpar o conteúdo novamente
+                contentDiv.innerHTML = '';
+                
+                // Renderizar a página de controle
+                const { cleanup, elements } = renderControlPage(contentDiv);
+                return { cleanup, elements };
+            }
         }, 1500);
     }
     
