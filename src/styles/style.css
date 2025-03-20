@@ -3970,3 +3970,282 @@ header.scrolled {
     transform: none;
     background-color: #666;
 }
+
+/* Estilos para a página de Minhas Compras */
+.my-orders-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.my-orders-container h2 {
+    color: white;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+}
+
+.my-orders-message {
+    text-align: center;
+    padding: 40px 20px;
+    background: rgba(30, 30, 50, 0.7);
+    border-radius: 10px;
+    margin: 20px auto;
+    max-width: 500px;
+}
+
+.my-orders-message h2 {
+    margin-bottom: 15px;
+}
+
+.my-orders-message p {
+    color: #bbb;
+    margin-bottom: 20px;
+}
+
+.login-button,
+.start-shopping-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #4a90e2, #845ec2);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.login-button:hover,
+.start-shopping-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.my-orders-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    background: rgba(30, 30, 50, 0.7);
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.my-orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+.my-orders-table th,
+.my-orders-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid rgba(100, 100, 255, 0.2);
+}
+
+.my-orders-table th {
+    background-color: rgba(50, 50, 80, 0.8);
+    color: white;
+    font-weight: 500;
+}
+
+.my-orders-table tr:hover {
+    background-color: rgba(50, 50, 80, 0.5);
+}
+
+.loading-message,
+.no-orders-message {
+    text-align: center;
+    padding: 30px;
+    color: #bbb;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 0.9em;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.status-aguardando {
+    background-color: #f0ad4e;
+    color: #000;
+}
+
+.status-confirmado {
+    background-color: #5cb85c;
+    color: white;
+}
+
+.status-enviado {
+    background-color: #5bc0de;
+    color: white;
+}
+
+.status-cancelado {
+    background-color: #d9534f;
+    color: white;
+}
+
+.order-details-btn {
+    padding: 6px 12px;
+    background-color: #3a3a8c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s ease;
+}
+
+.order-details-btn:hover {
+    background-color: #4a4aac;
+    transform: translateY(-2px);
+}
+
+.order-details-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.order-details-content {
+    background-color: #1a1a2e;
+    border-radius: 10px;
+    padding: 20px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 0 20px rgba(90, 90, 255, 0.5);
+    border: 1px solid rgba(100, 100, 255, 0.3);
+}
+
+.order-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(100, 100, 255, 0.3);
+}
+
+.order-details-header h3 {
+    margin: 0;
+    color: white;
+}
+
+.close-modal-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.close-modal-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.order-details-info {
+    background-color: rgba(30, 30, 50, 0.7);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.order-details-info p {
+    margin: 8px 0;
+    color: #ddd;
+}
+
+.order-items {
+    margin-bottom: 20px;
+}
+
+.order-items h4 {
+    margin-bottom: 15px;
+    color: white;
+}
+
+.order-item {
+    background-color: rgba(30, 30, 50, 0.7);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.order-item-info h4 {
+    margin: 0 0 10px 0;
+    color: white;
+}
+
+.order-item-info p {
+    margin: 5px 0;
+    color: #bbb;
+}
+
+.order-summary {
+    background-color: rgba(30, 30, 50, 0.7);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.order-subtotal,
+.order-shipping,
+.order-total {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px 0;
+    color: #ddd;
+}
+
+.order-shipping {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(100, 100, 255, 0.2);
+    color: #4caf50;
+}
+
+.order-total {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #5a5aff;
+}
+
+@media (max-width: 768px) {
+    .my-orders-container {
+        padding: 10px;
+    }
+    
+    .my-orders-table-wrapper {
+        padding: 10px;
+    }
+    
+    .my-orders-table th,
+    .my-orders-table td {
+        padding: 10px;
+        font-size: 0.9em;
+    }
+    
+    .order-details-content {
+        width: 95%;
+        padding: 15px;
+    }
+}

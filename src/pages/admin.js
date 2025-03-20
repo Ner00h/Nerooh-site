@@ -70,8 +70,36 @@ export function renderAdminPage(contentDiv) {
                         <input type="url" id="product-image">
                     </div>
                     <div class="form-group">
-                        <label for="product-link">Link para Compra (opcional)</label>
-                        <input type="url" id="product-link">
+                        <label for="product-classification">Classificação</label>
+                        <select id="product-classification" required>
+                            <option value="nerooh">Nerooh Std</option>
+                            <option value="eri">Eri Store</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <h4>Informações para Cálculo de Frete</h4>
+                        <div class="shipping-info-grid">
+                            <div>
+                                <label for="product-width">Largura (cm)</label>
+                                <input type="number" id="product-width" min="1" step="0.1">
+                            </div>
+                            <div>
+                                <label for="product-height">Altura (cm)</label>
+                                <input type="number" id="product-height" min="1" step="0.1">
+                            </div>
+                            <div>
+                                <label for="product-length">Comprimento (cm)</label>
+                                <input type="number" id="product-length" min="1" step="0.1">
+                            </div>
+                            <div>
+                                <label for="product-weight">Peso (kg)</label>
+                                <input type="number" id="product-weight" min="0.1" step="0.1">
+                            </div>
+                            <div>
+                                <label for="product-insurance">Valor para Seguro (R$)</label>
+                                <input type="number" id="product-insurance" min="0" step="0.01">
+                            </div>
+                        </div>
                     </div>
                     <div class="form-buttons">
                         <button type="submit">Salvar</button>
@@ -214,6 +242,12 @@ function setupSalesManager() {
         .sales-table .status-aguardando {
             background-color: #f0ad4e;
             color: #000;
+            max-width: none;
+        }
+        
+        .sales-table .status-processando {
+            background-color: #ff8c00;
+            color: #fff;
             max-width: none;
         }
         
@@ -410,6 +444,36 @@ function setupSalesManager() {
                 height: 32px;
             }
         }
+
+        .sales-modal-summary {
+            background-color: rgba(30, 30, 50, 0.7);
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            border: 1px solid rgba(100, 100, 255, 0.2);
+        }
+
+        .sales-modal-subtotal,
+        .sales-modal-shipping,
+        .sales-modal-total {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .sales-modal-shipping {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(100, 100, 255, 0.2);
+            color: #4caf50;
+        }
+
+        .sales-modal-total {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #5a5aff;
+        }
     `;
     document.head.appendChild(style);
     
@@ -420,6 +484,7 @@ function setupSalesManager() {
         <select id="sales-status-filter">
             <option value="all">Todos os Status</option>
             <option value="Pagamento pendente">Pagamento pendente</option>
+            <option value="Pagamento em processamento">Pagamento em processamento</option>
             <option value="Pagamento confirmado">Pagamento confirmado</option>
             <option value="Enviado">Enviado</option>
             <option value="Cancelado">Cancelado</option>
@@ -516,6 +581,7 @@ function setupSalesManager() {
                         </div>
                         <select class="status-select" data-sale-id="${sale.id}">
                             <option value="Pagamento pendente" ${sale.status === 'Pagamento pendente' ? 'selected' : ''}>Pagamento pendente</option>
+                            <option value="Pagamento em processamento" ${sale.status === 'Pagamento em processamento' ? 'selected' : ''}>Pagamento em processamento</option>
                             <option value="Pagamento confirmado" ${sale.status === 'Pagamento confirmado' ? 'selected' : ''}>Pagamento confirmado</option>
                             <option value="Enviado" ${sale.status === 'Enviado' ? 'selected' : ''}>Enviado</option>
                             <option value="Cancelado" ${sale.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
@@ -638,6 +704,12 @@ function setupSalesManager() {
         } else {
             itemsHtml = '<p>Nenhum item encontrado</p>';
         }
+
+        // Calcular subtotal (sem frete)
+        const subtotal = sale.items ? sale.items.reduce((total, item) => {
+            const price = typeof item.price === 'number' ? item.price : parseFloat(item.price.replace(/[^\d,]/g, '').replace(',', '.'));
+            return total + (price * item.quantity);
+        }, 0) : 0;
         
         modal.innerHTML = `
             <div class="sales-modal-content">
@@ -661,8 +733,21 @@ function setupSalesManager() {
                     ${itemsHtml}
                 </div>
                 
-                <div class="sales-modal-total">
-                    Total: R$ ${sale.total ? sale.total.toFixed(2) : '0.00'}
+                <div class="sales-modal-summary">
+                    <div class="sales-modal-subtotal">
+                        <span>Subtotal:</span>
+                        <span>R$ ${subtotal.toFixed(2)}</span>
+                    </div>
+                    ${sale.shipping ? `
+                        <div class="sales-modal-shipping">
+                            <span>Frete (${sale.shipping.name}):</span>
+                            <span>R$ ${sale.shipping.price.toFixed(2)}</span>
+                        </div>
+                    ` : ''}
+                    <div class="sales-modal-total">
+                        <span>Total:</span>
+                        <span>R$ ${sale.total ? sale.total.toFixed(2) : '0.00'}</span>
+                    </div>
                 </div>
             </div>
         `;
@@ -687,6 +772,8 @@ function setupSalesManager() {
         switch (status) {
             case 'Pagamento pendente':
                 return 'aguardando';
+            case 'Pagamento em processamento':
+                return 'processando';
             case 'Pagamento confirmado':
                 return 'confirmado';
             case 'Enviado':
@@ -837,6 +924,41 @@ function setupProductManager() {
     addProductBtn.style.position = 'static';
     addProductBtn.style.overflow = 'hidden';
 
+    // Adicionar estilos para o seletor de classificação
+    const classificationStyle = document.createElement('style');
+    classificationStyle.textContent = `
+        #product-classification {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(100, 100, 255, 0.3);
+            border-radius: 4px;
+            background: rgba(30, 30, 50, 0.8);
+            color: #fff;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        #product-classification:hover {
+            border-color: rgba(100, 100, 255, 0.6);
+            box-shadow: 0 0 5px rgba(90, 90, 255, 0.3);
+        }
+
+        #product-classification:focus {
+            outline: none;
+            border-color: rgba(100, 100, 255, 0.8);
+            box-shadow: 0 0 8px rgba(90, 90, 255, 0.4);
+        }
+
+        #product-classification option {
+            background: rgba(30, 30, 50, 0.95);
+            color: #fff;
+            padding: 10px;
+        }
+    `;
+    document.head.appendChild(classificationStyle);
+
     // Adicionar eventos para o hover do botão
     addProductBtn.addEventListener('mouseover', () => {
         addProductBtn.style.transform = 'translateY(-2px)';
@@ -853,6 +975,51 @@ function setupProductManager() {
     productFormContainer.style.padding = '15px';
     productFormContainer.style.borderRadius = '8px';
     productFormContainer.style.margin = '15px 0';
+
+    // Adicionar estilos para os campos de frete
+    const style = document.createElement('style');
+    style.textContent = `
+        .shipping-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .shipping-info-grid div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .shipping-info-grid label {
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        .shipping-info-grid input {
+            padding: 8px;
+            border: 1px solid rgba(100, 100, 255, 0.3);
+            border-radius: 4px;
+            background: rgba(30, 30, 50, 0.8);
+            color: #fff;
+        }
+
+        .shipping-info-grid input:focus {
+            outline: none;
+            border-color: rgba(100, 100, 255, 0.6);
+            box-shadow: 0 0 0 2px rgba(100, 100, 255, 0.2);
+        }
+
+        .form-group h4 {
+            margin: 15px 0 5px;
+            color: #fff;
+            font-size: 1em;
+            border-bottom: 1px solid rgba(100, 100, 255, 0.3);
+            padding-bottom: 5px;
+        }
+    `;
+    document.head.appendChild(style);
 
     // Mostrar formulário para adicionar novo produto
     addProductBtn.addEventListener('click', () => {
@@ -877,16 +1044,34 @@ function setupProductManager() {
         const description = document.getElementById('product-description').value.trim();
         const price = document.getElementById('product-price').value.trim();
         const imageUrl = document.getElementById('product-image').value.trim();
-        const link = document.getElementById('product-link').value.trim();
+        const classification = document.getElementById('product-classification').value;
         const productId = document.getElementById('product-id').value;
-        
+
+        // Criar objeto com os dados do produto
         const productData = {
             title,
             description,
             price,
             imageUrl,
-            link
+            classification
         };
+
+        // Adicionar informações de frete apenas se algum campo estiver preenchido
+        const width = document.getElementById('product-width').value;
+        const height = document.getElementById('product-height').value;
+        const length = document.getElementById('product-length').value;
+        const weight = document.getElementById('product-weight').value;
+        const insurance = document.getElementById('product-insurance').value;
+
+        if (width || height || length || weight || insurance) {
+            productData.shipping = {
+                width: width ? parseFloat(width) : null,
+                height: height ? parseFloat(height) : null,
+                length: length ? parseFloat(length) : null,
+                weight: weight ? parseFloat(weight) : null,
+                insurance_value: insurance ? parseFloat(insurance) : null
+            };
+        }
         
         let productRef;
         if (productId) {
@@ -904,6 +1089,7 @@ function setupProductManager() {
                 alert(productId ? 'Produto atualizado com sucesso!' : 'Produto adicionado com sucesso!');
             })
             .catch(error => {
+                console.error('Erro ao salvar produto:', error);
                 alert(`Erro ao salvar produto: ${error.message}`);
             });
     });
@@ -950,8 +1136,13 @@ function editProduct(id) {
             document.getElementById('product-description').value = product.description;
             document.getElementById('product-price').value = product.price;
             document.getElementById('product-image').value = product.imageUrl;
-            document.getElementById('product-link').value = product.link;
+            document.getElementById('product-classification').value = product.classification || 'nerooh';
             document.getElementById('product-id').value = id;
+            document.getElementById('product-width').value = product.shipping?.width || '';
+            document.getElementById('product-height').value = product.shipping?.height || '';
+            document.getElementById('product-length').value = product.shipping?.length || '';
+            document.getElementById('product-weight').value = product.shipping?.weight || '';
+            document.getElementById('product-insurance').value = product.shipping?.insurance_value || '';
             
             document.getElementById('product-form-container').style.display = 'block';
             document.getElementById('add-product-btn').style.display = 'none';

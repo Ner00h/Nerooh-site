@@ -117,8 +117,67 @@ export function renderCheckoutPage(contentDiv) {
                         </div>
                         
                         <div class="form-group">
-                            <label for="address">Endereço Completo</label>
-                            <textarea id="address" name="address" required rows="3" placeholder="Rua, número, complemento, bairro, cidade, estado, CEP"></textarea>
+                            <label for="cep">CEP</label>
+                            <input type="text" id="cep" name="cep" required placeholder="00000-000" maxlength="9">
+                        </div>
+                        
+                        <div class="checkout-shipping-info">
+                            <div class="shipping-rules">
+                                <p class="shipping-rule-title">🚚 Informações de Frete</p>
+                                <div class="shipping-rules-grid">
+                                    <div class="shipping-rule">
+                                        <span class="shipping-highlight">Cuiabá e Região:</span>
+                                        Taxa fixa R$ 15,00 ou R$ 1,00/km
+                                        <span class="shipping-free-tag">Frete GRÁTIS acima de R$ 80,00</span>
+                                    </div>
+                                    <div class="shipping-rule">
+                                        <span class="shipping-highlight">Demais Localidades:</span>
+                                        Via Correios/Jadlog
+                                        <span class="shipping-free-tag">Frete GRÁTIS acima de R$ 150,00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="checkout-shipping">
+                            <h3>Valor do Frete</h3>
+                            <div id="shipping-options">
+                                <p class="shipping-message">Digite seu CEP acima para calcular o frete</p>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="street">Rua</label>
+                            <input type="text" id="street" name="street" required>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="number">Número</label>
+                                <input type="text" id="number" name="number" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="complement">Complemento</label>
+                                <input type="text" id="complement" name="complement">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="neighborhood">Bairro</label>
+                            <input type="text" id="neighborhood" name="neighborhood" required>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="city">Cidade</label>
+                                <input type="text" id="city" name="city" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="state">Estado</label>
+                                <input type="text" id="state" name="state" required maxlength="2">
+                            </div>
                         </div>
                         
                         <div class="checkout-buttons">
@@ -139,7 +198,13 @@ export function renderCheckoutPage(contentDiv) {
                     name: formData.get('name'),
                     email: formData.get('email'),
                     phone: formData.get('phone'),
-                    address: formData.get('address')
+                    cep: formData.get('cep'),
+                    street: formData.get('street'),
+                    number: formData.get('number'),
+                    complement: formData.get('complement'),
+                    neighborhood: formData.get('neighborhood'),
+                    city: formData.get('city'),
+                    state: formData.get('state')
                 };
                 
                 // Salvar no localStorage para uso posterior
@@ -148,6 +213,201 @@ export function renderCheckoutPage(contentDiv) {
                 // Avançar para a próxima etapa
                 currentStep++;
                 renderCheckoutStep(currentStep);
+            });
+            
+            // Adicionar evento para busca de CEP
+            const cepInput = checkoutContainer.querySelector('#cep');
+            const shippingOptions = checkoutContainer.querySelector('#shipping-options');
+
+            // Formatar CEP enquanto digita
+            function formatCEP(cep) {
+                return cep.replace(/\D/g, '');
+            }
+
+            // Função para preencher os campos de endereço
+            async function fillAddressFields(cep) {
+                try {
+                    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                    const data = await response.json();
+
+                    if (data.erro) {
+                        throw new Error('CEP não encontrado');
+                    }
+
+                    // Preencher os campos do formulário
+                    checkoutContainer.querySelector('#street').value = data.logradouro;
+                    checkoutContainer.querySelector('#neighborhood').value = data.bairro;
+                    checkoutContainer.querySelector('#city').value = data.localidade;
+                    checkoutContainer.querySelector('#state').value = data.uf;
+
+                    // Calcular frete automaticamente
+                    await calculateShipping(cep, data.localidade);
+                } catch (error) {
+                    console.error('Erro ao buscar endereço:', error);
+                    alert('Erro ao buscar endereço. Por favor, verifique o CEP e tente novamente.');
+                }
+            }
+
+            // Função para calcular frete
+            async function calculateShipping(cep, cidade) {
+                try {
+                    // Verificar se o CEP é válido
+                    if (cep.length !== 8) {
+                        throw new Error('CEP inválido');
+                    }
+
+                    // Verificar se é Cuiabá ou Várzea Grande
+                    const cidadeLower = cidade.toLowerCase();
+                    const isCuiabaVg = cidadeLower === 'cuiabá' || cidadeLower === 'varzea grande';
+
+                    // Calcular o valor total do carrinho
+                    const cartTotal = cart.reduce((total, item) => {
+                        const itemPrice = typeof item.price === 'string' 
+                            ? parseFloat(item.price.replace(/[^\d,]/g, '').replace(',', '.'))
+                            : item.price;
+                        return total + (itemPrice * item.quantity);
+                    }, 0);
+
+                    if (isCuiabaVg) {
+                        // Se o valor for maior que R$ 80,00, frete grátis
+                        if (cartTotal >= 80) {
+                            renderShippingOptions([{
+                                id: 'local',
+                                company: { name: 'Entrega Local' },
+                                name: 'Entrega Local (Frete Grátis)',
+                                price: '0.00',
+                                delivery_time: '1-2'
+                            }]);
+                            return;
+                        }
+
+                        // Caso contrário, taxa fixa de R$ 15,00
+                        renderShippingOptions([{
+                            id: 'local',
+                            company: { name: 'Entrega Local' },
+                            name: 'Entrega Local',
+                            price: '15.00',
+                            delivery_time: '1-2'
+                        }]);
+                        return;
+                    }
+
+                    // Para outras cidades, usar o cálculo normal de frete
+                    const produtos = cart.map(item => ({
+                        id: item.id,
+                        width: item.shipping?.width || 10,
+                        height: item.shipping?.height || 10,
+                        length: item.shipping?.length || 15,
+                        weight: item.shipping?.weight || 0.3,
+                        insurance_value: item.shipping?.insurance_value || parseFloat(item.price.replace(/[^\d,]/g, '').replace(',', '.')),
+                        quantity: 1
+                    }));
+
+                    // Fazer a requisição para o worker
+                    const shippingResponse = await fetch('https://frete-proxy.nerooh-extremeh.workers.dev', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            cepDestino: cep,
+                            produtos: produtos
+                        })
+                    });
+
+                    if (!shippingResponse.ok) {
+                        throw new Error('Erro ao calcular o frete');
+                    }
+
+                    const shippingData = await shippingResponse.json();
+
+                    // Se o valor for maior que R$ 150,00, adicionar opção de frete grátis
+                    if (cartTotal >= 150) {
+                        shippingData.unshift({
+                            id: 'free',
+                            company: { name: 'Melhor Envio' },
+                            name: 'Frete Grátis',
+                            price: '0.00',
+                            delivery_time: '5-8'
+                        });
+                    }
+
+                    renderShippingOptions(shippingData);
+                } catch (error) {
+                    console.error('Erro ao calcular frete:', error);
+                    shippingOptions.innerHTML = `
+                        <p class="shipping-error">
+                            Erro ao calcular o frete. Por favor, tente novamente.
+                        </p>
+                    `;
+                }
+            }
+
+            // Função para renderizar as opções de frete
+            function renderShippingOptions(options) {
+                if (!options || options.length === 0) {
+                    shippingOptions.innerHTML = '<p class="shipping-error">Nenhuma opção de frete disponível para este CEP.</p>';
+                    return;
+                }
+
+                // Recuperar o frete selecionado do localStorage
+                const selectedShipping = JSON.parse(localStorage.getItem('selectedShipping') || '{}');
+
+                shippingOptions.innerHTML = `
+                    <div class="shipping-options-list">
+                        ${options.map(option => `
+                            <div class="shipping-option ${selectedShipping.price === parseFloat(option.price) ? 'selected' : ''}" data-price="${option.price}" data-name="${option.name}">
+                                <label>
+                                    <span class="shipping-company">${option.company.name}</span>
+                                    <span class="shipping-service">${option.name}</span>
+                                    <span class="shipping-price ${parseFloat(option.price) === 0 ? 'free-shipping' : ''}">
+                                        ${parseFloat(option.price) === 0 ? 'GRÁTIS' : `R$ ${parseFloat(option.price).toFixed(2)}`}
+                                    </span>
+                                    <span class="shipping-time">${option.delivery_time} dias úteis</span>
+                                </label>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                // Adicionar evento de clique para cada opção de frete
+                shippingOptions.querySelectorAll('.shipping-option').forEach(option => {
+                    option.addEventListener('click', () => {
+                        const price = parseFloat(option.dataset.price);
+                        const name = option.dataset.name;
+                        
+                        // Se a opção já está selecionada, desmarca
+                        if (option.classList.contains('selected')) {
+                            option.classList.remove('selected');
+                            localStorage.removeItem('selectedShipping');
+                        } else {
+                            // Remove a seleção de todas as outras opções
+                            shippingOptions.querySelectorAll('.shipping-option').forEach(opt => {
+                                opt.classList.remove('selected');
+                            });
+                            
+                            // Seleciona a opção atual
+                            option.classList.add('selected');
+                            
+                            // Salva no localStorage
+                            localStorage.setItem('selectedShipping', JSON.stringify({
+                                price: price,
+                                name: name
+                            }));
+                        }
+                        
+                        // Atualiza o resumo do pedido se estiver na etapa 2
+                        if (currentStep === 2) {
+                            renderOrderSummaryStep();
+                        }
+                    });
+                });
+            }
+
+            // Eventos para o CEP
+            cepInput.addEventListener('input', (e) => {
+                const formattedCep = formatCEP(e.target.value);
+                if (formattedCep.length === 8) {
+                    fillAddressFields(formattedCep);
+                }
             });
             
             // Adicionar evento ao link de voltar
@@ -199,10 +459,21 @@ export function renderCheckoutPage(contentDiv) {
                                 <span>Subtotal:</span>
                                 <span>R$ ${total.toFixed(2)}</span>
                             </div>
-                            <div class="checkout-total">
-                                <span>Total:</span>
-                                <span>R$ ${total.toFixed(2)}</span>
-                            </div>
+                            ${(() => {
+                                const selectedShipping = JSON.parse(localStorage.getItem('selectedShipping') || '{}');
+                                const shippingPrice = selectedShipping.price || 0;
+                                const shippingName = selectedShipping.name || 'Frete não calculado';
+                                return `
+                                    <div class="checkout-shipping">
+                                        <span>Frete (${shippingName}):</span>
+                                        <span>R$ ${shippingPrice.toFixed(2)}</span>
+                                    </div>
+                                    <div class="checkout-total">
+                                        <span>Total:</span>
+                                        <span>R$ ${(total + shippingPrice).toFixed(2)}</span>
+                                    </div>
+                                `;
+                            })()}
                         </div>
                         
                         <div class="checkout-customer-info">
@@ -214,7 +485,7 @@ export function renderCheckoutPage(contentDiv) {
                                         <p><strong>Nome:</strong> ${customerInfo.name || ''}</p>
                                         <p><strong>E-mail:</strong> ${customerInfo.email || ''}</p>
                                         <p><strong>Telefone:</strong> ${customerInfo.phone || ''}</p>
-                                        <p><strong>Endereço:</strong> ${customerInfo.address || ''}</p>
+                                        <p><strong>Endereço:</strong> ${customerInfo.street || ''} ${customerInfo.number || ''} ${customerInfo.complement || ''} ${customerInfo.neighborhood || ''} ${customerInfo.city || ''} ${customerInfo.state || ''} ${customerInfo.cep || ''}</p>
                                     `;
                                 })()}
                             </div>
@@ -255,6 +526,11 @@ export function renderCheckoutPage(contentDiv) {
             // Obter informações do cliente
             const customerInfo = JSON.parse(localStorage.getItem('customerInfo') || '{}');
             
+            // Obter o valor do frete selecionado
+            const selectedShipping = JSON.parse(localStorage.getItem('selectedShipping') || '{}');
+            const shippingPrice = selectedShipping.price || 0;
+            const finalTotal = total + shippingPrice;
+            
             // Salvar a venda no Firebase com status "Pagamento pendente"
             const db = getDatabase();
             const salesRef = ref(db, 'sales');
@@ -267,12 +543,16 @@ export function renderCheckoutPage(contentDiv) {
                 customerName: customerInfo.name || '',
                 customerEmail: customerInfo.email || '',
                 customerPhone: customerInfo.phone || '',
-                customerAddress: customerInfo.address || '',
+                customerAddress: customerInfo.street || '' + ', ' + customerInfo.number || '' + ', ' + customerInfo.complement || '' + ', ' + customerInfo.neighborhood || '' + ', ' + customerInfo.city || '' + ', ' + customerInfo.state || '' + ', ' + customerInfo.cep || '',
                 items: cart.map(item => ({
                     ...item,
                     price: typeof item.price === 'string' ? parseFloat(item.price.replace(/[^\d,]/g, '').replace(',', '.')) : item.price
                 })),
-                total: total,
+                total: finalTotal,
+                shipping: {
+                    price: shippingPrice,
+                    name: selectedShipping.name || 'Frete não calculado'
+                },
                 status: 'Pagamento pendente',
                 timestamp: serverTimestamp()
             };
@@ -305,7 +585,7 @@ export function renderCheckoutPage(contentDiv) {
                                     
                                     <div class="checkout-payment-total">
                                         <span>Valor Total:</span>
-                                        <span>R$ ${total.toFixed(2)}</span>
+                                        <span>R$ ${finalTotal.toFixed(2)}</span>
                                     </div>
                                     
                                     <div class="checkout-pix-info">
@@ -315,7 +595,7 @@ export function renderCheckoutPage(contentDiv) {
                                         <div class="checkout-qr-code">
                                             <img src="${pixQrCodeUrl}" alt="QR Code PIX">
                                         </div>
-                                        <p class="checkout-pix-value">Valor a transferir: <strong>R$ ${total.toFixed(2)}</strong></p>
+                                        <p class="checkout-pix-value">Valor a transferir: <strong>R$ ${finalTotal.toFixed(2)}</strong></p>
                                     </div>
                                     
                                     <button id="confirm-payment-button" class="checkout-confirm-button checkout-confirm-pulse">
@@ -342,7 +622,7 @@ export function renderCheckoutPage(contentDiv) {
                         const currentSaleId = localStorage.getItem('currentSaleId');
                         
                         if (currentSaleId) {
-                            // Atualizar o status da venda para "Pagamento confirmado"
+                            // Atualizar o status da venda para "Pagamento em processamento"
                             const saleRef = ref(db, `sales/${currentSaleId}`);
                             
                             // Obter a venda atual
@@ -352,10 +632,10 @@ export function renderCheckoutPage(contentDiv) {
                                     // Atualizar apenas o status
                                     set(saleRef, {
                                         ...sale,
-                                        status: 'Pagamento confirmado'
+                                        status: 'Pagamento em processamento'
                                     })
                                     .then(() => {
-                                        console.log(`Status da venda ${currentSaleId} atualizado para "Pagamento confirmado"`);
+                                        console.log(`Status da venda ${currentSaleId} atualizado para "Pagamento em processamento"`);
                                         
                                         // Mostrar mensagem de confirmação
                                         checkoutContainer.innerHTML = `
@@ -411,6 +691,11 @@ export function renderCheckoutPage(contentDiv) {
             const pixData = `00020126360014br.gov.bcb.pix0114pix@nerooh.xyz5204000053039865802BR5925Carlito Batista Do Nascim6009Sao Paulo62290525REC67BBEFC5523B146905260163047D36`;
             const pixQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${pixData}`;
             
+            // Obter o valor do frete selecionado
+            const selectedShipping = JSON.parse(localStorage.getItem('selectedShipping') || '{}');
+            const shippingPrice = selectedShipping.price || 0;
+            const finalTotal = total + shippingPrice;
+            
             checkoutContainer.innerHTML = `
                 <div class="checkout-step">
                     <h1>Finalizar Compra</h1>
@@ -430,7 +715,7 @@ export function renderCheckoutPage(contentDiv) {
                             
                             <div class="checkout-payment-total">
                                 <span>Valor Total:</span>
-                                <span>R$ ${total.toFixed(2)}</span>
+                                <span>R$ ${finalTotal.toFixed(2)}</span>
                             </div>
                             
                             <div class="checkout-pix-info">
@@ -440,7 +725,7 @@ export function renderCheckoutPage(contentDiv) {
                                 <div class="checkout-qr-code">
                                     <img src="${pixQrCodeUrl}" alt="QR Code PIX">
                                 </div>
-                                <p class="checkout-pix-value">Valor a transferir: <strong>R$ ${total.toFixed(2)}</strong></p>
+                                <p class="checkout-pix-value">Valor a transferir: <strong>R$ ${finalTotal.toFixed(2)}</strong></p>
                             </div>
                             
                             <button id="confirm-payment-button" class="checkout-confirm-button checkout-confirm-pulse">

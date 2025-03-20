@@ -9,22 +9,275 @@ export function renderProductsPage(contentDiv) {
     productsContainer.style.paddingTop = "5px";
     productsContainer.style.marginTop = "5px";
 
-    // Título da página
-    const title = document.createElement("h1");
-    title.textContent = "Produtos";
-    title.classList.add("products-title");
-    productsContainer.appendChild(title);
-
-    // Descrição
-    const description = document.createElement("p");
-    description.textContent = "Confira os produtos disponíveis para compra.";
-    description.classList.add("products-description");
-    productsContainer.appendChild(description);
-
     // Lista de produtos
     const productsList = document.createElement("div");
     productsList.classList.add("products-list");
+    
+    // Criar containers separados para cada classificação
+    const neroohContainer = document.createElement("div");
+    neroohContainer.classList.add("nerooh-products");
+    const neroohTitle = document.createElement("h2");
+    neroohTitle.textContent = "Produtos Nerooh Std";
+    neroohTitle.classList.add("classification-title");
+    neroohContainer.appendChild(neroohTitle);
+    
+    const eriContainer = document.createElement("div");
+    eriContainer.classList.add("eri-products");
+    const eriTitle = document.createElement("h2");
+    eriTitle.textContent = "Produtos Eri Store";
+    eriTitle.classList.add("classification-title");
+    eriContainer.appendChild(eriTitle);
+    
+    productsList.appendChild(neroohContainer);
+    productsList.appendChild(eriContainer);
     productsContainer.appendChild(productsList);
+    
+    // Adicionar estilos para as seções
+    const style = document.createElement('style');
+    style.textContent = `
+        .classification-title {
+            color: #fff;
+            font-size: 1.6em;
+            margin: 15px 0 10px;
+            text-align: center;
+            padding-bottom: 5px;
+            border-bottom: 2px solid rgba(100, 100, 255, 0.3);
+            width: 100%;
+        }
+        
+        .classification-title img {
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+        
+        .nerooh-logo {
+            height: 60px;
+        }
+        
+        .eri-logo {
+            height: 120px;
+        }
+        
+        .nerooh-products, .eri-products {
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        /* Estilos específicos para produtos Eri Store */
+        .eri-products .product-card {
+            background: rgba(255, 192, 203, 0.15);
+            border: 1px solid rgba(255, 182, 193, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .eri-products .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(255, 182, 193, 0.3);
+            border-color: rgba(255, 182, 193, 0.6);
+        }
+
+        .eri-products .product-info h3 {
+            color: #FFB6C1;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .eri-products .product-price {
+            color: #FF69B4;
+        }
+
+        .eri-products .view-more-btn {
+            background-color: #FFB6C1;
+            color: #4A4A4A;
+        }
+
+        .eri-products .view-more-btn:hover {
+            background-color: #FF69B4;
+            color: white;
+        }
+
+        .eri-products .add-to-cart-btn {
+            background-color: #FF69B4;
+            color: white;
+        }
+
+        .eri-products .add-to-cart-btn:hover {
+            background-color: #FF1493;
+        }
+
+        .eri-products .buy-button {
+            background-color: #FF1493;
+        }
+
+        .eri-products .buy-button:hover {
+            background-color: #FF69B4;
+        }
+
+        .eri-products .product-image {
+            background: rgba(255, 192, 203, 0.1);
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 10px;
+        }
+        
+        .products-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .product-card {
+            background: rgba(30, 30, 50, 0.7);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(100, 100, 255, 0.3);
+            width: 100%;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 180px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(20, 20, 40, 0.8);
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-info {
+            padding: 8px;
+        }
+
+        .product-info h3 {
+            margin: 0 0 4px;
+            color: #fff;
+            font-size: 1em;
+        }
+
+        .product-info p {
+            margin: 0 0 8px;
+            color: #ccc;
+            font-size: 0.85em;
+            line-height: 1.2;
+        }
+
+        .product-price {
+            font-size: 1.1em;
+            color: #5a5aff;
+            margin: 4px 0;
+            font-weight: bold;
+        }
+
+        .view-more-btn, .add-to-cart-btn, .buy-button {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 2px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .view-more-btn {
+            background-color: #3a3a8c;
+            color: white;
+        }
+
+        .view-more-btn:hover {
+            background-color: #4a4aac;
+        }
+
+        .add-to-cart-btn {
+            background-color: #5a5aff;
+            color: white;
+            width: auto;
+        }
+
+        .add-to-cart-btn:hover {
+            background-color: #6b6bff;
+        }
+
+        .buy-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .buy-button:hover {
+            background-color: #45a049;
+        }
+
+        @media (max-width: 1024px) {
+            .products-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .product-card {
+                max-width: 260px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+                padding: 10px;
+            }
+
+            .product-card {
+                max-width: 240px;
+            }
+
+            .product-image {
+                height: 160px;
+            }
+
+            .classification-title {
+                font-size: 1.4em;
+                margin: 20px 0 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .product-card {
+                max-width: 180px;
+            }
+
+            .classification-title {
+                font-size: 1.2em;
+            }
+
+            .product-image {
+                height: 120px;
+            }
+        }
+    `;
+    document.head.appendChild(style);
     
     // Adicionar o container ao DOM antes de carregar os dados
     contentDiv.appendChild(productsContainer);
@@ -65,31 +318,86 @@ export function renderProductsPage(contentDiv) {
     const productsRef = ref(db, 'products');
     
     onValue(productsRef, (snapshot) => {
-        productsList.innerHTML = ''; // Limpar lista antes de adicionar produtos
+        // Criar título com logo para Nerooh
+        const neroohTitleHtml = document.createElement('h2');
+        neroohTitleHtml.classList.add('classification-title');
+        neroohTitleHtml.innerHTML = `Produtos <img src="/logo.svg" alt="Nerooh Logo" class="nerooh-logo">`;
+        neroohContainer.innerHTML = '';
+        neroohContainer.appendChild(neroohTitleHtml);
+
+        // Criar título com logo para Eri Store
+        const eriTitleHtml = document.createElement('h2');
+        eriTitleHtml.classList.add('classification-title');
+        eriTitleHtml.innerHTML = `Produtos <img src="/logoEri.png" alt="Eri Store Logo" class="eri-logo">`;
+        eriContainer.innerHTML = '';
+        eriContainer.appendChild(eriTitleHtml);
+        
+        // Criar containers de grid para os produtos
+        const neroohGrid = document.createElement('div');
+        neroohGrid.classList.add('products-grid');
+        neroohContainer.appendChild(neroohGrid);
+        
+        const eriGrid = document.createElement('div');
+        eriGrid.classList.add('products-grid');
+        eriContainer.appendChild(eriGrid);
         
         const products = snapshot.val() || {};
         
-        if (Object.keys(products).length === 0) {
-            // Se não houver produtos, mostrar mensagem
+        // Separar produtos por classificação
+        const neroohProducts = {};
+        const eriProducts = {};
+        
+        Object.entries(products).forEach(([id, product]) => {
+            if (product.classification === 'eri') {
+                eriProducts[id] = product;
+            } else {
+                // Se não tiver classificação ou for 'nerooh'
+                neroohProducts[id] = product;
+            }
+        });
+        
+        if (Object.keys(neroohProducts).length === 0 && Object.keys(eriProducts).length === 0) {
+            // Se não houver produtos em nenhuma categoria
             const emptyMessage = document.createElement("p");
             emptyMessage.textContent = "Nenhum produto disponível no momento.";
             emptyMessage.style.textAlign = "center";
             emptyMessage.style.padding = "20px";
-            productsList.appendChild(emptyMessage);
+            neroohGrid.appendChild(emptyMessage.cloneNode(true));
+            eriGrid.appendChild(emptyMessage);
         } else {
-            // Adicionar produtos do Firebase
-            Object.entries(products).forEach(([id, product]) => {
-                createProductCard(id, product);
-            });
+            // Adicionar produtos Nerooh
+            if (Object.keys(neroohProducts).length === 0) {
+                const emptyNerooh = document.createElement("p");
+                emptyNerooh.textContent = "Nenhum produto Nerooh Std disponível no momento.";
+                emptyNerooh.style.textAlign = "center";
+                emptyNerooh.style.padding = "20px";
+                neroohGrid.appendChild(emptyNerooh);
+            } else {
+                Object.entries(neroohProducts).forEach(([id, product]) => {
+                    createProductCard(id, product, neroohGrid);
+                });
+            }
+            
+            // Adicionar produtos Eri Store
+            if (Object.keys(eriProducts).length === 0) {
+                const emptyEri = document.createElement("p");
+                emptyEri.textContent = "Nenhum produto Eri Store disponível no momento.";
+                emptyEri.style.textAlign = "center";
+                emptyEri.style.padding = "20px";
+                eriGrid.appendChild(emptyEri);
+            } else {
+                Object.entries(eriProducts).forEach(([id, product]) => {
+                    createProductCard(id, product, eriGrid);
+                });
+            }
         }
         
         // Ajustar posição após o carregamento dos dados
-        // Isso garante que o container esteja centralizado mesmo após adicionar conteúdo
         setTimeout(adjustContainerPosition, 100);
     });
 
     // Função para criar um card de produto
-    function createProductCard(id, product) {
+    function createProductCard(id, product, container) {
         const card = document.createElement("div");
         card.classList.add("product-card");
 
@@ -176,7 +484,7 @@ export function renderProductsPage(contentDiv) {
         }
 
         card.appendChild(productInfo);
-        productsList.appendChild(card);
+        container.appendChild(card);
     }
 
     return {

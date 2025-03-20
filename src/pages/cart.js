@@ -89,9 +89,13 @@ export function renderCartPage(contentDiv) {
                         <span>Total:</span>
                         <span>R$ ${total.toFixed(2)}</span>
                     </div>
-                    <button class="cart-page-checkout">Finalizar Compra</button>
-                    <button class="cart-page-clear">Limpar Carrinho</button>
-                    <a href="/produtos" class="cart-page-continue-shopping">Continuar Comprando</a>
+                    <div class="cart-page-buttons">
+                        <button class="cart-page-checkout">Finalizar Compra</button>
+                        <div class="cart-page-secondary-buttons">
+                            <button class="cart-page-clear">Limpar Carrinho</button>
+                            <a href="/produtos" class="cart-page-continue-shopping">Continuar Comprando</a>
+                        </div>
+                    </div>
                 </div>
             `;
             
@@ -194,4 +198,213 @@ export function renderCartPage(contentDiv) {
         },
         elements: {} // Retornar um objeto elements vazio para que o container não seja adicionado ao dynamicElements
     };
-} 
+}
+
+// Adicionar estilos CSS
+const shippingStyles = document.createElement('style');
+shippingStyles.textContent = `
+    .cart-page-shipping {
+        background: rgba(30, 30, 50, 0.7);
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+    }
+
+    .cart-page-shipping h3 {
+        margin: 0 0 10px;
+        font-size: 1.1em;
+        color: #fff;
+    }
+
+    .cart-page-shipping-input {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .cart-page-shipping-input input {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid rgba(100, 100, 255, 0.3);
+        border-radius: 4px;
+        background: rgba(30, 30, 50, 0.8);
+        color: #fff;
+    }
+
+    .cart-page-shipping-input button {
+        padding: 8px 15px;
+        background: linear-gradient(135deg, #4a90e2, #845ec2);
+        border: none;
+        border-radius: 4px;
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .cart-page-shipping-input button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .shipping-options-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .shipping-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background: rgba(40, 40, 60, 0.7);
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .shipping-option label {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 5px;
+        flex: 1;
+        cursor: pointer;
+    }
+
+    .shipping-company {
+        font-weight: bold;
+        color: #fff;
+    }
+
+    .shipping-service {
+        color: #ccc;
+        grid-column: 1;
+    }
+
+    .shipping-price {
+        grid-column: 2;
+        grid-row: 1;
+        color: #4a90e2;
+        font-weight: bold;
+        text-align: right;
+    }
+
+    .shipping-time {
+        grid-column: 2;
+        grid-row: 2;
+        color: #ccc;
+        font-size: 0.9em;
+        text-align: right;
+    }
+
+    .shipping-error {
+        color: #ff6b6b;
+        margin: 10px 0;
+        text-align: center;
+    }
+
+    .cart-page-total small {
+        display: block;
+        font-size: 0.8em;
+        color: #ccc;
+        margin-top: 5px;
+    }
+`;
+document.head.appendChild(shippingStyles);
+
+// Adicionar os estilos CSS (após os estilos existentes do shipping)
+const cartButtonStyles = document.createElement('style');
+cartButtonStyles.textContent = `
+    .cart-page-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 20px;
+        align-items: flex-end;
+    }
+
+    .cart-page-secondary-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .cart-page-checkout {
+        padding: 12px 25px;
+        background: linear-gradient(135deg, #4a90e2, #845ec2);
+        border: none;
+        border-radius: 5px;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 200px;
+    }
+
+    .cart-page-checkout:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .cart-page-clear {
+        padding: 8px 15px;
+        background: rgba(255, 107, 107, 0.1);
+        border: 1px solid #ff6b6b;
+        border-radius: 5px;
+        color: #ff6b6b;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .cart-page-clear:hover {
+        background: rgba(255, 107, 107, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .cart-page-continue-shopping {
+        padding: 8px 15px;
+        background: rgba(74, 144, 226, 0.1);
+        border: 1px solid #4a90e2;
+        border-radius: 5px;
+        color: #4a90e2;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .cart-page-continue-shopping:hover {
+        background: rgba(74, 144, 226, 0.2);
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .cart-page-buttons {
+            align-items: stretch;
+        }
+
+        .cart-page-secondary-buttons {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .cart-page-checkout,
+        .cart-page-clear,
+        .cart-page-continue-shopping {
+            width: 100%;
+            text-align: center;
+        }
+    }
+`;
+document.head.appendChild(cartButtonStyles);
+
+// Adicionar estilos para o frete grátis
+const freeShippingStyles = document.createElement('style');
+freeShippingStyles.textContent = `
+    .free-shipping {
+        color: #4CAF50 !important;
+        font-weight: bold;
+    }
+`;
+document.head.appendChild(freeShippingStyles); 

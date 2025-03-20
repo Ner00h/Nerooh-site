@@ -84,6 +84,20 @@ export function setupAuth(updateAuthStatus) {
     editProfileButton.textContent = "Editar Perfil";
     dropdownMenu.appendChild(editProfileButton);
     
+    // Botão de Minhas Compras
+    const myOrdersButton = document.createElement("button");
+    myOrdersButton.id = "my-orders-button";
+    myOrdersButton.classList.add("dropdown-item");
+    myOrdersButton.textContent = "Minhas Compras";
+    myOrdersButton.onclick = () => {
+        // Fechar dropdown
+        dropdownMenu.classList.remove("show");
+        // Navegar para a página de pedidos
+        history.pushState({ page: 'my-orders' }, null, '/my-orders');
+        window.dispatchEvent(new CustomEvent('route-change'));
+    };
+    dropdownMenu.appendChild(myOrdersButton);
+    
     // Separador adicional
     const separator2 = document.createElement("div");
     separator2.classList.add("dropdown-separator");

@@ -9,6 +9,7 @@ import { renderProductDetailPage } from '../pages/productDetail.js';
 import { renderAdminPage } from '../pages/admin.js';
 import { renderCartPage } from '../pages/cart.js';
 import { renderCheckoutPage } from '../pages/checkout.js';
+import { renderMyOrdersPage } from '../pages/my-orders.js';
 import { isAuthenticated, isAdmin } from './auth.js';
 
 // Exportar setupEventListeners para poder ser usado no main.js
@@ -34,6 +35,13 @@ export function initRouter(contentDiv, updateDynamicElements, getAuthStatus) {
         '/produtos': () => renderProductsPage(contentDiv),
         '/carrinho': () => renderCartPage(contentDiv),
         '/checkout': () => renderCheckoutPage(contentDiv),
+        '/my-orders': () => {
+            if (!isAuthenticated()) {
+                history.pushState({ page: 'login' }, null, '/login');
+                return renderLoginPage(contentDiv, "Faça login para ver seus pedidos.");
+            }
+            return renderMyOrdersPage(contentDiv);
+        },
         '/admin': () => {
             console.log("Tentando acessar a rota de admin, isAdmin():", isAdmin());
             if (!isAdmin()) {
