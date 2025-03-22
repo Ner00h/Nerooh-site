@@ -8,6 +8,9 @@ export function renderProductsPage(contentDiv) {
     productsContainer.classList.add("products-container");
     productsContainer.style.paddingTop = "5px";
     productsContainer.style.marginTop = "5px";
+    productsContainer.style.maxWidth = "800px"; // Definir largura máxima
+    productsContainer.style.width = "90%"; // Garantir responsividade
+    productsContainer.style.overflowX = "hidden"; // Evitar overflow horizontal
 
     // Lista de produtos
     const productsList = document.createElement("div");

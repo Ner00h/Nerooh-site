@@ -1,12 +1,25 @@
 export function initBackground() {
+    // Criar um container fixo para o background
+    const backgroundContainer = document.createElement("div");
+    backgroundContainer.id = "background-container";
+    backgroundContainer.style.position = "fixed";
+    backgroundContainer.style.top = "0";
+    backgroundContainer.style.left = "0";
+    backgroundContainer.style.width = "100vw";
+    backgroundContainer.style.height = "100vh";
+    backgroundContainer.style.overflow = "hidden";
+    backgroundContainer.style.pointerEvents = "none";
+    backgroundContainer.style.zIndex = "-1";
+    document.body.appendChild(backgroundContainer);
+
     function createStar() {
         const star = document.createElement("div");
         star.classList.add("star");
-        document.body.appendChild(star);
-        const baseX = Math.random() * window.innerWidth;
-        const baseY = Math.random() * window.innerHeight * 2;
-        star.style.left = baseX + "px";
-        star.style.top = baseY + "px";
+        backgroundContainer.appendChild(star);
+        const baseX = Math.random() * 100;
+        const baseY = Math.random() * 100;
+        star.style.left = baseX + "vw";
+        star.style.top = baseY + "vh";
         star.style.animationDuration = (Math.random() * 5 + 5) + "s";
         star.dataset.baseX = baseX;
         star.dataset.baseY = baseY;
@@ -16,14 +29,14 @@ export function initBackground() {
     function createPlanet() {
         const planet = document.createElement("div");
         planet.classList.add("planet");
-        document.body.appendChild(planet);
+        backgroundContainer.appendChild(planet);
         const size = Math.random() * 15 + 8;
-        const baseX = Math.random() * window.innerWidth;
-        const baseY = Math.random() * window.innerHeight * 2;
+        const baseX = Math.random() * 100;
+        const baseY = Math.random() * 100;
         planet.style.width = size + "px";
         planet.style.height = size + "px";
-        planet.style.left = baseX + "px";
-        planet.style.top = baseY + "px";
+        planet.style.left = baseX + "vw";
+        planet.style.top = baseY + "vh";
         planet.dataset.baseX = baseX;
         planet.dataset.baseY = baseY;
 
@@ -43,23 +56,26 @@ export function initBackground() {
     const stars = [];
     const planets = [];
 
-    for (let i = 0; i < 100; i++) stars.push(createStar());
-    for (let i = 0; i < 15; i++) planets.push(createPlanet());
+    for (let i = 0; i < 70; i++) stars.push(createStar());
+    for (let i = 0; i < 10; i++) planets.push(createPlanet());
 
     return { stars, planets };
 }
 
 export function animateBackground(stars, planets, dynamicElements = {}) {
     function updatePositions(mouseX, mouseY) {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
         stars.forEach(star => {
             const baseX = parseFloat(star.dataset.baseX);
             const baseY = parseFloat(star.dataset.baseY);
             const randomDx = parseFloat(star.dataset.randomX) || 0;
             const randomDy = parseFloat(star.dataset.randomY) || 0;
-            const mouseDx = mouseX !== null ? (mouseX - baseX) * 0.05 : 0;
-            const mouseDy = mouseY !== null ? (mouseY - baseY) * 0.05 : 0;
-            star.style.left = (baseX + randomDx + mouseDx) + "px";
-            star.style.top = (baseY + randomDy + mouseDy - window.scrollY * 0.1) + "px";
+            const mouseDx = mouseX !== null ? ((mouseX / viewportWidth) * 100 - baseX) * 0.05 : 0;
+            const mouseDy = mouseY !== null ? ((mouseY / viewportHeight) * 100 - baseY) * 0.05 : 0;
+            star.style.left = (baseX + randomDx + mouseDx) + "vw";
+            star.style.top = (baseY + randomDy + mouseDy) + "vh";
         });
 
         planets.forEach(planet => {
@@ -67,10 +83,10 @@ export function animateBackground(stars, planets, dynamicElements = {}) {
             const baseY = parseFloat(planet.dataset.baseY);
             const randomDx = parseFloat(planet.dataset.randomX) || 0;
             const randomDy = parseFloat(planet.dataset.randomY) || 0;
-            const mouseDx = mouseX !== null ? (mouseX - baseX) * 0.03 : 0;
-            const mouseDy = mouseY !== null ? (mouseY - baseY) * 0.03 : 0;
-            planet.style.left = (baseX + randomDx + mouseDx) + "px";
-            planet.style.top = (baseY + randomDy + mouseDy - window.scrollY * 0.2) + "px";
+            const mouseDx = mouseX !== null ? ((mouseX / viewportWidth) * 100 - baseX) * 0.03 : 0;
+            const mouseDy = mouseY !== null ? ((mouseY / viewportHeight) * 100 - baseY) * 0.03 : 0;
+            planet.style.left = (baseX + randomDx + mouseDx) + "vw";
+            planet.style.top = (baseY + randomDy + mouseDy) + "vh";
         });
 
         // Atualizar todos os dynamicElements (como productsContainer e projectsContainer)
@@ -122,12 +138,12 @@ export function animateBackground(stars, planets, dynamicElements = {}) {
 
     setInterval(() => {
         stars.forEach(star => {
-            star.dataset.randomX = (Math.random() - 0.5) * 10;
-            star.dataset.randomY = (Math.random() - 0.5) * 10;
+            star.dataset.randomX = (Math.random() - 0.5) * 2;
+            star.dataset.randomY = (Math.random() - 0.5) * 2;
         });
         planets.forEach(planet => {
-            planet.dataset.randomX = (Math.random() - 0.5) * 10;
-            planet.dataset.randomY = (Math.random() - 0.5) * 10;
+            planet.dataset.randomX = (Math.random() - 0.5) * 2;
+            planet.dataset.randomY = (Math.random() - 0.5) * 2;
         });
         Object.entries(dynamicElements).forEach(([key, element]) => {
             if (element) {
@@ -139,7 +155,8 @@ export function animateBackground(stars, planets, dynamicElements = {}) {
     }, 2000);
 
     document.addEventListener('mousemove', (e) => {
-        updatePositions(e.clientX, e.clientY + window.scrollY);
+        const rect = document.getElementById('background-container').getBoundingClientRect();
+        updatePositions(e.clientX - rect.left, e.clientY - rect.top);
     });
 
     document.addEventListener('mouseleave', () => {
